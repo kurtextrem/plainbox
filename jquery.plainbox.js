@@ -23,13 +23,6 @@
 		elem.removeClass(inClass)
 	}
 
-	function popstate (state) {
-		hideImage($(cls + '.' + inClass))
-
-		if (state && state.fullLink && document.location !== state.fullLink)
-			document.querySelector(cls + '[data-link="' + state.fullLink + '"]').click()
-	}
-
 	$.fn.plainbox = function (selector) {
 		this.off(cls)
 		.on('click' + cls, selector, function (e) {
@@ -41,11 +34,11 @@
 				full = e.currentTarget.dataset.link || ''
 
 			e.preventDefault()
-			history.pushState({ pictureURL: url, fullLink:  full }, 'Image ' + url, full)
 
 			if (elem !== null) {
 				elem.classList.add(inClass)
 				elem.style.display = 'block'
+				elem.focus()
 				return
 			}
 
@@ -56,6 +49,7 @@
 				img = new Image()
 
 			this.append($a)
+			$a.focus()
 
 			img.onload = function (e) {
 				var 	width = e.target.width,
@@ -69,18 +63,18 @@
 					'data-href': url
 				})
 				$a.css(style)
+				$a.focus()
 			}
 			img.onerror = function (e) {
 				hideImage($a)
 			}
 			img.src = url
 		}.bind(this))
-		.on('click' + cls, cls, function (e) {
+		.on('click' + cls + ' keyup' + cls, cls, function (e) {
 			e.preventDefault()
-			hideImage($(e.currentTarget))
+			if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27))
+				hideImage($(e.currentTarget))
 		})
-
-		window.addEventListener('popstate', popstate)
 
 		return this
 	}
