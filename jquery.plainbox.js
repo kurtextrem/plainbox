@@ -6,6 +6,7 @@
 		cls = '.' + name,
 		_$a = $('<a class="' + name + '" style="" data-href=""></a>')
 		_$a.css({
+			display: 'block',
 			position: 'fixed',
 			top: 0,
 			left: 0,
@@ -32,10 +33,11 @@
 			if (url) {
 				var 	$a = _$a.clone(),
 					style = {
-						display: 'block',
 						'background-image': 'url(' + url + ')'
 					},
 					img = new Image()
+
+				this.append($a)
 
 				img.onload = function (e) {
 					var width = e.target.width,
@@ -49,9 +51,7 @@
 						'data-href': url
 					})
 					$a.css(style)
-
-					this.append($a)
-				}.bind(this)
+				}
 				img.src = url
 			}
 		}.bind(this))
