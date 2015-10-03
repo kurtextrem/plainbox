@@ -21,12 +21,12 @@
 	function hideImage (elem) {
 		elem.hide()
 		elem.removeClass(inClass)
-		history.back()
 	}
 
 	function popstate (state) {
 		hideImage($(cls + '.' + inClass))
-		if (state.fullLink && document.location !== state.fullLink)
+
+		if (state && state.fullLink && document.location !== state.fullLink)
 			document.querySelector(cls + '[data-link="' + state.fullLink + '"]').click()
 	}
 
@@ -58,7 +58,7 @@
 			this.append($a)
 
 			img.onload = function (e) {
-				var width = e.target.width,
+				var 	width = e.target.width,
 					height = e.target.height
 
 				if (width > window.innerWidth || height > window.innerHeight)
