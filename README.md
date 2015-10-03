@@ -1,8 +1,8 @@
-# stupidbox
+# plainbox
 
-This is a really simple and a bit stupid **image lightbox** jQuery plugin. It has no options and works out of the box. It just a javascript *jquery.stupidbox.js* file with no styleshets, images, etc.
+This is a really simple and a bit stupid **image lightbox** jQuery plugin. It has no options and works out of the box. It just a javascript *jquery.plainbox.js* file with no styleshets, images, etc.
 
-And again, all you need is **jquery.stupidbox.js** (it's around 30 lines of code).
+And again, all you need is **jquery.plainbox.js** (it's around 70 lines of code).
 
 ## Demo
 
@@ -23,16 +23,11 @@ Or you can use just &lt;img&gt; tag. In this case, you will get the same image i
 ## Javascript
 
     jQuery(function ($) {
-        $("a").stupidbox();
+        $('body').plainbox('a');
     });
 
 Or:
 
     jQuery(function ($) {
-        $("img").stupidbox();
+        $('body').plainbox('img');
     });
-
-## BTW
-
-We stretch image in the lightbox to full screen keeping aspect ratio, so it's recommended to use high quality images for "big image".
-
