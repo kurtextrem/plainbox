@@ -21,6 +21,7 @@
 	function hideImage (elem) {
 		elem.hide()
 		elem.removeClass(inClass)
+		history.back()
 	}
 
 	function popstate (state) {
