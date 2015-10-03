@@ -5,7 +5,7 @@
 		name = 'simplebox',
 		cls = '.' + name,
 		inClass = 'in',
-		_$a = $('<a class="' + name + '" style="" data-href=""></a>')
+		_$a = $('<a class="' + name + ' ' + inClass + '" style="" data-href=""></a>')
 		_$a.css({
 			display: 'block',
 			position: 'fixed',
@@ -18,23 +18,35 @@
 			'z-index': 999999
 		})
 
+	function hideImage (elem) {
+		elem.hide()
+		elem.removeClass(inClass)
+	}
+
+	function popstate (state) {
+		hideImage($(cls + '.' + inClass))
+		if (state.fullLink && document.location !== state.fullLink)
+			document.querySelector(cls + '[data-link="' + state.fullLink + '"]').click()
+	}
+
 	$.fn.plainbox = function (selector) {
 		this.off(cls)
 		.on('click' + cls, selector, function (e) {
-			e.preventDefault()
+			var 	url = e.currentTarget.href || e.relatedTarget.src
 
-			var 	url = e.currentTarget.href || e.relatedTarget.src,
-				elem = document.querySelector(cls + '[data-href="' + url + '"]'),
+			if (!url) return
+
+			var	elem = document.querySelector(cls + '[data-href="' + url + '"]'),
 				full = e.currentTarget.dataset.link || ''
 
+			e.preventDefault()
 			history.pushState({ pictureURL: url, fullLink:  full }, 'Image ' + url, full)
+
 			if (elem !== null) {
 				elem.classList.add(inClass)
 				elem.style.display = 'block'
 				return
 			}
-
-			if (!url) return
 
 			var 	$a = _$a.clone(),
 				style = {
@@ -55,25 +67,19 @@
 					href: url,
 					'data-href': url
 				})
-				$a.addClass(inClass)
 				$a.css(style)
 			}
 			img.onerror = function (e) {
-				$a.hide()
+				hideImage($a)
 			}
 			img.src = url
 		}.bind(this))
 		.on('click' + cls, cls, function (e) {
 			e.preventDefault()
-			e.currentTarget.style.display = 'none'
-			e.currentTarget.classList.remove(inClass)
+			hideImage($(e.currentTarget))
 		})
 
-		window.addEventListener('popstate', function (state) {
-			$(cls + '.' + inClass).hide()
-			if (state.fullLink && document.location !== state.fullLink)
-				document.querySelector(cls + '[data-link="' + state.fullLink + '"]').click()
-		})
+		window.addEventListener('popstate', popstate)
 
 		return this
 	}
