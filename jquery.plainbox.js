@@ -26,12 +26,12 @@
 	$.fn.plainbox = function (selector) {
 		this.off(cls)
 		.on('click' + cls, selector, function (e) {
-			var url = e.currentTarget.href || e.relatedTarget.src
+			var url = e.currentTarget.href || e.currentTarget.src
 
 			if (!url) return
 
-			var elem = document.querySelector(cls + '[data-href="' + url + '"]'),
-			full = e.currentTarget.dataset.link || url
+			var elem = document.querySelector(cls + '[href="' + url + '"]'),
+				img = e.currentTarget.dataset.image || url
 
 			e.preventDefault()
 
@@ -42,31 +42,30 @@
 				return
 			}
 
-			var 	$a = _$a.clone(),
+			var $a = _$a.clone(),
 				style = {
-					'background-image': 'url(' + url + ')'
-				},
-				img = new Image()
+					'background-image': 'url(' + img + ')'
+				}
 
 			this.append($a)
 			$a.focus()
 
+			img = new Image()
 			img.onload = function (e) {
-				var width = e.target.width,
-				height = e.target.height
-
-				if (width > window.innerWidth || height > window.innerHeight)
+				if (e.target.width > window.innerWidth || e.target.height > window.innerHeight)
 					style['background-size'] = 'contain'
 
 				$a.attr({
-					href: full,
-					'data-href': url
+					href: url
 				})
 				$a.css(style)
 				$a.focus()
+
+				img = null
 			}
 			img.onerror = function (e) {
 				hideImage($a)
+				img = null
 			}
 			img.src = url
 		}.bind(this))

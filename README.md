@@ -20,6 +20,12 @@ Or you can use just &lt;img&gt; tag. In this case, you will get the same image i
 
     <img src="image.jpg">
 
+You can also give a story link (e.g. where comments are).
+
+    <a href="/picture/1234" data-image="big-image.jpg">
+        <img src="thumbnail-image.jpg">
+    </a>
+
 ## Javascript
 
     jQuery(function ($) {
