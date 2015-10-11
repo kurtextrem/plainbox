@@ -26,12 +26,12 @@
 	$.fn.plainbox = function (selector) {
 		this.off(cls)
 		.on('click' + cls, selector, function (e) {
-			var 	url = e.currentTarget.href || e.relatedTarget.src
+			var url = e.currentTarget.href || e.relatedTarget.src
 
 			if (!url) return
 
-			var	elem = document.querySelector(cls + '[data-href="' + url + '"]'),
-				full = e.currentTarget.dataset.link || ''
+			var elem = document.querySelector(cls + '[data-href="' + url + '"]'),
+			full = e.currentTarget.dataset.link || url
 
 			e.preventDefault()
 
@@ -52,14 +52,14 @@
 			$a.focus()
 
 			img.onload = function (e) {
-				var 	width = e.target.width,
-					height = e.target.height
+				var width = e.target.width,
+				height = e.target.height
 
 				if (width > window.innerWidth || height > window.innerHeight)
 					style['background-size'] = 'contain'
 
 				$a.attr({
-					href: url,
+					href: full,
 					'data-href': url
 				})
 				$a.css(style)
