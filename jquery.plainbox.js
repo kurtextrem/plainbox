@@ -30,11 +30,9 @@
 
 			if (!url) return
 
-			var elem = document.querySelector(cls + '[href="' + url + '"]'),
-				img = e.currentTarget.dataset.image || url
-
 			e.preventDefault()
 
+			var elem = document.querySelector(cls + '[href="' + url + '"]')
 			if (elem !== null) {
 				elem.classList.add(inClass)
 				elem.style.display = 'block'
@@ -43,6 +41,7 @@
 			}
 
 			var $a = _$a.clone(),
+				img = e.currentTarget.dataset.image || url,
 				style = {
 					'background-image': 'url(' + img + ')'
 				}
