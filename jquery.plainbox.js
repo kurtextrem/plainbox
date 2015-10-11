@@ -1,11 +1,11 @@
 !function (window, $) {
 	'use strict'
 
-	var	document = window.document,
+	var document = window.document,
 		name = 'simplebox',
 		cls = '.' + name,
 		inClass = 'in',
-		_$a = $('<a class="' + name + ' ' + inClass + '" style="" data-href=""></a>')
+		_$a = $('<a class="' + name + ' ' + inClass + '" style=""></a>')
 		_$a.css({
 			display: 'block',
 			position: 'fixed',
@@ -14,7 +14,7 @@
 			right: 0,
 			bottom: 0,
 			background: 'rgba(0, 0, 0, 0.8) center center no-repeat',
-			'background-image': 'url(//s4db.net/assets/img/goalpost.gif)',
+			'background-image': 'url(//s4db.net/assets/img/goalpost.gif)', // loading animation
 			'z-index': 999999
 		})
 
@@ -50,8 +50,8 @@
 			this.append($a)
 			$a.focus()
 
-			img = new Image()
-			img.onload = function (e) {
+			elem = new Image()
+			elem.onload = function (e) {
 				if (e.target.width > window.innerWidth || e.target.height > window.innerHeight)
 					style['background-size'] = 'contain'
 
@@ -61,13 +61,13 @@
 				$a.css(style)
 				$a.focus()
 
-				img = null
+				elem = null
 			}
-			img.onerror = function (e) {
+			elem.onerror = function (e) {
 				hideImage($a)
-				img = null
+				elem = null
 			}
-			img.src = url
+			elem.src = img
 		}.bind(this))
 		.on('click' + cls + ' keyup' + cls, cls, function (e) {
 			e.preventDefault()
