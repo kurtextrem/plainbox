@@ -1,8 +1,8 @@
 # plainbox
 
-This is a really simple and a bit stupid **image lightbox** jQuery plugin. It has no options and works out of the box. It just a javascript *jquery.plainbox.js* file with no styleshets, images, etc.
+This is a really simple **image lightbox** jQuery plugin. It has very little options and works out of the box. It just is a javascript *jquery.plainbox.js* file with no styleshets, images, etc.
 
-And again, all you need is **jquery.plainbox.js** (it's around 70 lines of code).
+And again, all you need is **jquery.plainbox.js** (it's around 100 lines of code).
 
 ## Demo
 
@@ -34,6 +34,10 @@ You can also give a story link (e.g. where comments are).
 
 Or:
 
-    jQuery(function ($) {
-        $('body').plainbox('img');
-    });
+    $.fn.ready(function () {
+        $('.some--container').plainbox('img', {
+                className: 'plainbox', // default; The class name of the plainbox(es)
+                parent: $('body') // default; Where the plainbox is appended to.
+                loadingURL: 'someGif' // please don't hotlink; Use your own animation.
+            })
+    })

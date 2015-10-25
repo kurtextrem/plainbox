@@ -27,10 +27,12 @@
 	}
 
 	var settings = {
-		_target: null,
 		className: 'simplebox',
 		inClass: 'in',
-		_$a: ''
+		parent: null, // jQ selection
+		loadingURL: '//s4db.net/assets/img/goalpost.gif',
+		_$a: '',
+		_target: null
 	}
 
 	settings._$a = (function () {
@@ -43,7 +45,7 @@
 			right: 0,
 			bottom: 0,
 			background: 'rgba(0, 0, 0, 0.8) center center no-repeat',
-			'background-image': 'url(//s4db.net/assets/img/goalpost.gif)', // loading animation
+			'background-image': 'url("' + settings.loadingURL + '")', // loading animation
 			'z-index': 999999
 		})
 	})()
@@ -75,7 +77,7 @@
 			'background-image': 'url(' + img + ')'
 		}
 
-		settings._target.append($a)
+		settings.parent.append($a)
 		$a.focus()
 
 		elem = new Image()
@@ -109,10 +111,11 @@
 			settings = $.extend(settings, options)
 			hideImage = _hideImage(settings.inClass)
 		}
+		if (!settings.parent)
+			settings.parent = $('body')
 		settings._target = this
 
-		return
-		this.on('click' + settings._selector, selector, clickEvent) // click on thumb
+		return this.on('click' + settings._selector, selector, clickEvent) // click on thumb
 		.on('click' + settings._selector + ' keyup' + settings._selector, settings._selector, closeEvent) // click on plainbox image
 	}
 }(window, jQuery)
