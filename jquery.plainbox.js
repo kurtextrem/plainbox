@@ -5,7 +5,9 @@
 		_clientWidth = null,
 		_clientHeight = null
 
-	function hideImage(cls) {
+	// var VERSION = '0.1'
+
+	function _hideImage(cls) {
 		return function (elem) {
 			elem.hide()
 			elem.removeClass(cls)
@@ -24,26 +26,15 @@
 		return _clientHeight
 	}
 
-	function Plainbox(container, selector, options) {
-		this.container =	container
-		this.options = $.extend({}, Plainbox.DEFAULT, options)
-		this.hideImage = hideImage(this.options.inClass)
-		this._selector = '.' + this.options.className
-
-		this.addListener(selector)
-		return this
-	}
-
-	Plainbox.VERSION = '0.1'
-
-	Plainbox.DEFAULT = {
+	var settings = {
+		_target: null,
 		className: 'simplebox',
 		inClass: 'in',
 		_$a: ''
 	}
 
-	Plainbox.DEFAULT._$a = (function () {
-		return $('<a class="' + Plainbox.DEFAULT.className + ' ' + Plainbox.DEFAULT.inClass + '" style=""></a>')
+	settings._$a = (function () {
+		return $('<a class="' + settings.className + ' ' + settings.inClass + '" style=""></a>')
 		.css({
 			display: 'block',
 			position: 'fixed',
@@ -57,36 +48,34 @@
 		})
 	})()
 
-	Plainbox.prototype.hideImage = null
+	settings._selector = (function () {
+		return '.' + settings.className
+	})()
 
-	Plainbox.prototype.addListener = function (selector) {
-		this.container
-		.on('click' + this._selector, selector, this.clickEvent.bind(this)) // click on thumb
-		.on('click' + this._selector + ' keyup' + this._selector, this._selector, this.closeEvent.bind(this)) // click on plainbox image
-	}
+	var hideImage = _hideImage(settings.inClass)
 
-	Plainbox.prototype.clickEvent = function (e) {
+	function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
 		if (!url) return
 
 		e.preventDefault()
 
-		var elem = document.querySelector(this._selector + '[href="' + url + '"]')
+		var elem = document.querySelector(settings._selector + '[href="' + url + '"]')
 		if (elem !== null) {
-			elem.classList.add(this.options.inClass)
+			elem.classList.add(settings.inClass)
 			elem.style.display = 'block'
 			elem.focus()
 			return
 		}
 
-		var $a = this.options._$a.clone(),
+		var $a = settings._$a.clone(),
 		img = e.currentTarget.dataset.image || url,
 		style = {
 			'background-image': 'url(' + img + ')'
 		}
 
-		this.append($a)
+		settings._target.append($a)
 		$a.focus()
 
 		elem = new Image()
@@ -101,21 +90,29 @@
 			$a.focus()
 
 			elem = null
-		}.bind(this)
+		}
 		elem.onerror = function (e) {
-			this.hideImage($a)
+			hideImage($a)
 			elem = null
-		}.bind(this)
+		}
 		elem.src = img
 	}
 
-	Plainbox.prototype.closeEvent = function (e) {
+	function closeEvent(e) {
 		e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27))
-			this.hideImage($(e.currentTarget))
+			hideImage($(e.currentTarget))
 	}
 
 	$.fn.plainbox = function (selector, options) {
-		new Plainbox(this, selector, options)
+		if (options) {
+			settings = $.extend(settings, options)
+			hideImage = _hideImage(settings.inClass)
+		}
+		settings._target = this
+
+		return
+		this.on('click' + settings._selector, selector, clickEvent) // click on thumb
+		.on('click' + settings._selector + ' keyup' + settings._selector, settings._selector, closeEvent) // click on plainbox image
 	}
 }(window, jQuery)
