@@ -2,11 +2,49 @@
 	'use strict'
 
 	var document = window.document,
-		name = 'simplebox',
-		cls = '.' + name,
-		inClass = 'in',
-		_$a = $('<a class="' + name + ' ' + inClass + '" style=""></a>')
-		_$a.css({
+		_clientWidth = null,
+		_clientHeight = null
+
+	function hideImage(cls) {
+		return function (elem) {
+			elem.hide()
+			elem.removeClass(cls)
+		}
+	}
+
+	function getClientWidth() {
+		if (!_clientWidth)
+			_clientWidth = window.innerWidth
+		return _clientWidth
+	}
+
+	function getClientHeight() {
+		if (!_clientHeight)
+			_clientHeight = window.innerHeight
+		return _clientHeight
+	}
+
+	function Plainbox(container, selector, options) {
+		this.container =	container
+		this.options = $.extend({}, Plainbox.DEFAULT, options)
+		this.hideImage = hideImage(this.options.inClass)
+		this._selector = '.' + this.options.className
+
+		this.addListener(selector)
+		return this
+	}
+
+	Plainbox.VERSION = '0.1'
+
+	Plainbox.DEFAULT = {
+		className: 'simplebox',
+		inClass: 'in',
+		_$a: ''
+	}
+
+	Plainbox.DEFAULT._$a = (function () {
+		return $('<a class="' + Plainbox.DEFAULT.className + ' ' + Plainbox.DEFAULT.inClass + '" style=""></a>')
+		.css({
 			display: 'block',
 			position: 'fixed',
 			top: 0,
@@ -17,63 +55,67 @@
 			'background-image': 'url(//s4db.net/assets/img/goalpost.gif)', // loading animation
 			'z-index': 999999
 		})
+	})()
 
-	function hideImage (elem) {
-		elem.hide()
-		elem.removeClass(inClass)
+	Plainbox.prototype.hideImage = null
+
+	Plainbox.prototype.addListener = function (selector) {
+		this.container
+		.on('click' + this._selector, selector, this.clickEvent.bind(this)) // click on thumb
+		.on('click' + this._selector + ' keyup' + this._selector, this._selector, this.closeEvent.bind(this)) // click on plainbox image
 	}
 
-	$.fn.plainbox = function (selector) {
-		this.off(cls)
-		.on('click' + cls, selector, function (e) {
-			var url = e.currentTarget.href || e.currentTarget.src
+	Plainbox.prototype.clickEvent = function (e) {
+		var url = e.currentTarget.href || e.currentTarget.src
 
-			if (!url) return
+		if (!url) return
 
-			e.preventDefault()
+		e.preventDefault()
 
-			var elem = document.querySelector(cls + '[href="' + url + '"]')
-			if (elem !== null) {
-				elem.classList.add(inClass)
-				elem.style.display = 'block'
-				elem.focus()
-				return
-			}
+		var elem = document.querySelector(this._selector + '[href="' + url + '"]')
+		if (elem !== null) {
+			elem.classList.add(this.options.inClass)
+			elem.style.display = 'block'
+			elem.focus()
+			return
+		}
 
-			var $a = _$a.clone(),
-				img = e.currentTarget.dataset.image || url,
-				style = {
-					'background-image': 'url(' + img + ')'
-				}
+		var $a = this.options._$a.clone(),
+		img = e.currentTarget.dataset.image || url,
+		style = {
+			'background-image': 'url(' + img + ')'
+		}
 
-			this.append($a)
+		this.append($a)
+		$a.focus()
+
+		elem = new Image()
+		elem.onload = function (e) {
+			if (e.target.width > getClientWidth() || e.target.height > getClientHeight())
+				style['background-size'] = 'contain'
+
+			$a.attr({
+				href: url
+			})
+			$a.css(style)
 			$a.focus()
 
-			elem = new Image()
-			elem.onload = function (e) {
-				if (e.target.width > window.innerWidth || e.target.height > window.innerHeight)
-					style['background-size'] = 'contain'
+			elem = null
+		}.bind(this)
+		elem.onerror = function (e) {
+			this.hideImage($a)
+			elem = null
+		}.bind(this)
+		elem.src = img
+	}
 
-				$a.attr({
-					href: url
-				})
-				$a.css(style)
-				$a.focus()
+	Plainbox.prototype.closeEvent = function (e) {
+		e.preventDefault()
+		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27))
+			this.hideImage($(e.currentTarget))
+	}
 
-				elem = null
-			}
-			elem.onerror = function (e) {
-				hideImage($a)
-				elem = null
-			}
-			elem.src = img
-		}.bind(this))
-		.on('click' + cls + ' keyup' + cls, cls, function (e) {
-			e.preventDefault()
-			if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27))
-				hideImage($(e.currentTarget))
-		})
-
-		return this
+	$.fn.plainbox = function (selector, options) {
+		new Plainbox(this, selector, options)
 	}
 }(window, jQuery)
