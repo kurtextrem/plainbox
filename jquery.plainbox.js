@@ -27,12 +27,11 @@
 	}
 
 	var settings = {
-		className: 'simplebox',
+		className: 'plainbox',
 		inClass: 'in',
 		parent: null, // jQ selection
 		loadingURL: '//s4db.net/assets/img/goalpost.gif',
-		_$a: '',
-		_target: null
+		_$a: ''
 	}
 
 	settings._$a = (function () {
@@ -89,7 +88,7 @@
 				href: url
 			})
 			$a.css(style)
-			$a.focus()
+			$a.focus() // enable esc
 
 			elem = null
 		}
@@ -113,9 +112,10 @@
 		}
 		if (!settings.parent)
 			settings.parent = $('body')
-		settings._target = this
 
-		return this.on('click' + settings._selector, selector, clickEvent) // click on thumb
-		.on('click' + settings._selector + ' keyup' + settings._selector, settings._selector, closeEvent) // click on plainbox image
+		this.on('click' + settings._selector, selector, clickEvent) // click on thumb
+		settings.parent.on('click' + settings._selector + ' keyup' + settings._selector, settings._selector, closeEvent) // click on plainbox image
+
+		return this
 	}
 }(window, jQuery)
