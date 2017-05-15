@@ -70,7 +70,7 @@
 		var elem = document.querySelector(settings._selector + '[href="' + url + '"]')
 		if (elem !== null) {
 			elem.classList.add(settings.inClass)
-			elem.style.display = 'block'
+			elem.style.display = 'block' // re-opening w/o animation as user wants to see the image
 			elem.focus()
 			return
 		}
