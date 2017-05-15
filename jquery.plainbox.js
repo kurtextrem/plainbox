@@ -1,16 +1,16 @@
-!function (window, $) {
+(function(window, $) {
 	'use strict'
 
 	var document = window.document,
 		_clientWidth = null,
 		_clientHeight = null
 
-	// var VERSION = '0.1'
+	// var VERSION = '1.0'
 
 	function _hideImage(cls) {
-		return function (elem) {
-			elem.hide()
-			elem.removeClass(cls)
+		return function(elem) {
+			elem.style.display = 'none'
+			elem.classList.remove(cls)
 		}
 	}
 
@@ -29,27 +29,32 @@
 	var settings = {
 		className: 'plainbox',
 		inClass: 'in',
-		parent: null, // jQ selection
+		parent: null, // jQuery selector
 		loadingURL: '//s4db.net/assets/img/goalpost.gif',
-		_$a: ''
+		_$a: '',
+		_selector: ''
 	}
 
-	settings._$a = (function () {
+	settings._$a = (function() {
 		return $('<a class="' + settings.className + ' ' + settings.inClass + '" style=""></a>')
-		.css({
-			display: 'block',
-			position: 'fixed',
-			top: 0,
-			left: 0,
-			right: 0,
-			bottom: 0,
-			background: 'rgba(0, 0, 0, 0.8) center center no-repeat',
-			'background-image': 'url("' + settings.loadingURL + '")', // loading animation
-			'z-index': 999999
-		})
+			.css({
+				display: 'block',
+				position: 'fixed',
+				top: 0,
+				left: 0,
+				right: 0,
+				bottom: 0,
+				background: 'rgba(0, 0, 0, 0.8) center center no-repeat',
+				'background-image': 'url("' + settings.loadingURL + '")', // loading animation
+				'z-index': 99999,
+				contain: 'strict',
+				opacity: 0,
+				transition: 'opacity 300ms ease-in'
+				// is creating an additional layer worth it?
+			})
 	})()
 
-	settings._selector = (function () {
+	settings._selector = (function() {
 		return '.' + settings.className
 	})()
 
@@ -70,52 +75,64 @@
 			return
 		}
 
+		createImage(e, url)
+	}
+
+	function createImage(e, url) {
 		var $a = settings._$a.clone(),
-		img = e.currentTarget.dataset.image || url,
-		style = {
-			'background-image': 'url(' + img + ')'
-		}
+			img = e.currentTarget.dataset.image || url,
+			style = {
+				'background-image': 'url("' + img + '")'
+			}
 
-		settings.parent.append($a)
-		$a.focus()
+		append$a($a)
 
-		elem = new Image()
-		elem.onload = function (e) {
+		var elem = new Image()
+		elem.onload = function(e) {
 			if (e.target.width > getClientWidth() || e.target.height > getClientHeight())
 				style['background-size'] = 'contain'
 
-			$a.attr({
+			$a.prop({
 				href: url
 			})
 			$a.css(style)
-			$a.focus() // enable esc
+			$a.focus() // enable ESC
 
 			elem = null
 		}
-		elem.onerror = function (e) {
-			hideImage($a)
+		elem.onerror = function(e) {
+			hideImage($a[0])
 			elem = null
 		}
 		elem.src = img
 	}
 
+	function append$a($a) {
+		settings.parent.append($a)
+		$a.focus() // enable ESC
+		window.requestAnimationFrame(function() {
+			$a.css('opacity', 1)
+		})
+	}
+
 	function closeEvent(e) {
 		e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27))
-			hideImage($(e.currentTarget))
+			hideImage(e.currentTarget)
 	}
 
-	$.fn.plainbox = function (selector, options) {
+	$.fn.plainbox = function(selector, options) {
 		if (options) {
 			settings = $.extend(settings, options)
 			hideImage = _hideImage(settings.inClass)
 		}
 		if (!settings.parent)
-			settings.parent = $('body')
+			settings.parent = $(document.body)
 
-		this.on('click' + settings._selector, selector, clickEvent) // click on thumb
-		settings.parent.on('click' + settings._selector + ' keyup' + settings._selector, settings._selector, closeEvent) // click on plainbox image
+		var _selector = settings._selector
+		this.on('click' + _selector, selector, clickEvent) // click on thumb
+		settings.parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent) // click on plainbox image
 
 		return this
 	}
-}(window, jQuery)
+})(window, jQuery)
