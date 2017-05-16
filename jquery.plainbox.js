@@ -63,7 +63,8 @@
 
 	var _t = null, // timeout
 		style = {
-			'background-image': ''
+			'background-image': '',
+			'background-size': ''
 		}
 	function _hideImage(cls) {
 		return function _hideImage(elem) {
