@@ -7,13 +7,6 @@
 
 	// var VERSION = '1.0'
 
-	function _hideImage(cls) {
-		return function(elem) {
-			elem.style.display = 'none'
-			elem.classList.remove(cls)
-		}
-	}
-
 	function getClientWidth() {
 		if (!_clientWidth)
 			_clientWidth = window.innerWidth
@@ -31,25 +24,29 @@
 		inClass: 'in',
 		parent: null, // jQuery selector
 		loadingURL: '//s4db.net/assets/img/goalpost.gif',
-		_$a: '',
+		errorURL: '',
+
+		_$a: null,
 		_selector: ''
 	}
 
+	var _loading = 'url("' + settings.loadingURL + '")', // loading animation
+		_error = 'url("' + settings.errorURL + '")'
 	settings._$a = (function() {
 		return $('<a class="' + settings.className + ' ' + settings.inClass + '" style=""></a>')
 			.css({
 				display: 'block',
 				position: 'fixed',
-				top: 0,
-				left: 0,
-				right: 0,
-				bottom: 0,
+				top: '0',
+				left: '0',
+				right: '0',
+				bottom: '0',
 				background: 'rgba(0, 0, 0, 0.8) center center no-repeat',
-				'background-image': 'url("' + settings.loadingURL + '")', // loading animation
-				'z-index': 99999,
+				'background-image': _loading,
+				'z-index': '99999',
 				contain: 'strict',
-				opacity: 0,
-				transition: 'opacity 300ms ease-in'
+				opacity: '0',
+				transition: 'opacity 300ms ease-in-out'
 				// is creating an additional layer worth it?
 			})
 	})()
@@ -58,60 +55,73 @@
 		return '.' + settings.className
 	})()
 
+	function _hideImage(cls) {
+		return function _hideImage(elem) {
+			window.requestAnimationFrame(function() {
+				elem.style.opacity = '0'
+			})
+			elem.classList.remove(cls)
+
+			elem.addEventListener('transitionend', function hide() {
+				elem.style.display = 'none'
+				elem.style.backgroundImage = _loading
+				elem.removeEventListener('transitionend', hide)
+			})
+		}
+	}
 	var hideImage = _hideImage(settings.inClass)
 
 	function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
-		if (!url) return
+		if (!url) return true
 
 		e.preventDefault()
 
-		var elem = document.querySelector(settings._selector + '[href="' + url + '"]')
-		if (elem !== null) {
-			elem.classList.add(settings.inClass)
-			elem.style.display = 'block' // re-opening w/o animation as user wants to see the image
-			elem.focus()
-			return
-		}
-
-		createImage(e, url)
+		showImage(e, url)
+		return false
 	}
 
-	function createImage(e, url) {
-		var $a = settings._$a.clone(),
+	function showImage(e, url) {
+		var $a = settings._$a,
 			img = e.currentTarget.dataset.image || url,
 			style = {
 				'background-image': 'url("' + img + '")'
 			}
 
-		append$a($a)
+		$a.prop('href', url)
 
 		var elem = new Image()
-		elem.onload = function(e) {
-			if (e.target.width > getClientWidth() || e.target.height > getClientHeight())
+		function loaded(e) {
+			if (e !== undefined && (e.target.width > getClientWidth() || e.target.height > getClientHeight()))
 				style['background-size'] = 'contain'
 
-			$a.prop({
-				href: url
-			})
 			$a.css(style)
-			$a.focus() // enable ESC
 
 			elem = null
 		}
+
+		elem.onload = loaded
 		elem.onerror = function(e) {
-			hideImage($a[0])
-			elem = null
+			style['background-image'] = _error
+			loaded()
 		}
 		elem.src = img
+
+		append$a($a)
 	}
 
+	var _inDom = false
 	function append$a($a) {
-		settings.parent.append($a)
+		if (!_inDom) {
+			settings.parent.append($a)
+			_inDom = true
+		}
+
+		$a.css('display', 'block')
 		$a.focus() // enable ESC
 		window.requestAnimationFrame(function() {
-			$a.css('opacity', 1)
+			$a.css('opacity', '1')
 		})
 	}
 
@@ -130,8 +140,8 @@
 			settings.parent = $(document.body)
 
 		var _selector = settings._selector
-		this.on('click' + _selector, selector, clickEvent) // click on thumb
-		settings.parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent) // click on plainbox image
+		this.on('click' + _selector, selector, clickEvent) // click on any thumb
+		settings.parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent) // click / ESC on plainbox image
 
 		return this
 	}
