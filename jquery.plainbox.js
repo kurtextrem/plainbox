@@ -61,7 +61,10 @@
 		return '.' + settings.className
 	})()
 
-	var _t = null // timeout
+	var _t = null, // timeout
+		style = {
+			'background-image': ''
+		}
 	function _hideImage(cls) {
 		return function _hideImage(elem) {
 			window.clearTimeout(_t)
@@ -73,8 +76,9 @@
 			elem.addEventListener('transitionend', function hide() {
 				elem.removeEventListener('transitionend', hide)
 				elem.style.display = 'none'
-				elem.style.backgroundSize = 'initial'
 				elem.style.backgroundImage = _loading
+				elem.style.backgroundSize = ''
+				style['background-size'] = ''
 				elem.textContent = ''
 			})
 		}
@@ -92,9 +96,6 @@
 		return false
 	}
 
-	var style = {
-		'background-image': ''
-	}
 	function showImage(img, url) {
 		var $a = settings._$a
 
