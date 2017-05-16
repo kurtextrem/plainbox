@@ -45,7 +45,7 @@ Or:
                 parent: $(document.body)    // default; Where the plainbox is appended to.
                 loadingURL: 'someGif',      // please don't hotlink; Use your own animation.
                 errorURL: '',               // if the image could not be loaded it displays the errorURL image.
-                errorText: ''               // error text to display
+                error: ''                   // error text to display
             })
     })
 

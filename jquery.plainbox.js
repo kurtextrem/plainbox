@@ -25,7 +25,7 @@
 		parent: null, // jQuery selector
 		loadingURL: 'https://s4db.net/assets/img/goalpost.gif',
 		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
-		errorText: 'Error',
+		error: 'Error',
 
 		_$a: null,
 		_selector: ''
@@ -61,8 +61,10 @@
 		return '.' + settings.className
 	})()
 
+	var _t = null // timeout
 	function _hideImage(cls) {
 		return function _hideImage(elem) {
+			window.clearTimeout(_t)
 			window.requestAnimationFrame(function rAF() {
 				elem.style.opacity = '0'
 				elem.classList.remove(cls)
@@ -112,9 +114,9 @@
 		elem.onload = load
 		elem.onerror = function() {
 			style['background-image'] = _error
-			$a[0].textContent = settings.errorText
+			$a[0].textContent = settings.error
 			load()
-			setTimeout(function() { hideImage($a[0]) }, 5000)
+			_t = setTimeout(function() { hideImage($a[0]) }, 5000)
 		}
 		elem.src = img
 
