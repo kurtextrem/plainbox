@@ -6,6 +6,8 @@ This is a really simple **image lightbox** jQuery plugin. It has very little opt
 
 And again, all you need is **jquery.plainbox.js** (it's around 150 lines of code).
 
+### Note: Browsers need flexbox support. Polyfill accordingly.
+
 ## Demo
 
 [Demo on CodePen](http://codepen.io/starikovs/full/vNEvpW/)
@@ -42,7 +44,8 @@ Or:
                 inClass: 'in',              // default; The class is added when the plainbox is visible
                 parent: $(document.body)    // default; Where the plainbox is appended to.
                 loadingURL: 'someGif',      // please don't hotlink; Use your own animation.
-                errorURL: ''                // if the image could not be loaded it displays the errorURL image.
+                errorURL: '',               // if the image could not be loaded it displays the errorURL image.
+                errorText: ''               // error text to display
             })
     })
 

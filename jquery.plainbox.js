@@ -7,14 +7,14 @@
 
 	// var VERSION = '1.0'
 
-	function getClientWidth() {
-		if (!_clientWidth)
+	function clientWidth() {
+		if (_clientWidth === null)
 			_clientWidth = window.innerWidth
 		return _clientWidth
 	}
 
-	function getClientHeight() {
-		if (!_clientHeight)
+	function clientHeight() {
+		if (_clientHeight === null)
 			_clientHeight = window.innerHeight
 		return _clientHeight
 	}
@@ -23,8 +23,9 @@
 		className: 'plainbox',
 		inClass: 'in',
 		parent: null, // jQuery selector
-		loadingURL: '//s4db.net/assets/img/goalpost.gif',
-		errorURL: '',
+		loadingURL: 'https://s4db.net/assets/img/goalpost.gif',
+		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
+		errorText: 'Error',
 
 		_$a: null,
 		_selector: ''
@@ -35,7 +36,7 @@
 	settings._$a = (function() {
 		return $('<a class="' + settings.className + ' ' + settings.inClass + '" style=""></a>')
 			.css({
-				display: 'block',
+				display: 'flex',
 				position: 'fixed',
 				top: '0',
 				left: '0',
@@ -47,7 +48,12 @@
 				contain: 'strict',
 				opacity: '0',
 				'will-change': 'opacity',
-				transition: 'opacity 300ms ease-in-out'
+				transition: 'opacity 300ms ease-in-out',
+				// Text
+				'justify-content': 'center',
+				'align-items': 'center',
+				'text-decoration': 'none',
+				color: 'inherit'
 			})
 	})()
 
@@ -57,7 +63,7 @@
 
 	function _hideImage(cls) {
 		return function _hideImage(elem) {
-			window.requestAnimationFrame(function() {
+			window.requestAnimationFrame(function rAF() {
 				elem.style.opacity = '0'
 				elem.classList.remove(cls)
 			})
@@ -65,6 +71,7 @@
 			elem.addEventListener('transitionend', function hide() {
 				elem.removeEventListener('transitionend', hide)
 				elem.style.display = 'none'
+				elem.style.backgroundSize = 'initial'
 				elem.style.backgroundImage = _loading
 			})
 		}
@@ -78,22 +85,22 @@
 
 		e.preventDefault()
 
-		showImage(e, url)
+		showImage(e.currentTarget.dataset.image || url, url)
 		return false
 	}
 
-	function showImage(e, url) {
-		var $a = settings._$a,
-			img = e.currentTarget.dataset.image || url,
-			style = {
-				'background-image': 'url("' + img + '")'
-			}
+	var style = {
+		'background-image': ''
+	}
+	function showImage(img, url) {
+		var $a = settings._$a
 
 		$a.prop('href', url)
+		style['background-image'] = 'url("' + img + '")'
 
 		var elem = new Image()
-		function loaded(_img) {
-			if (_img !== undefined && (_img.target.width > getClientWidth() || _img.target.height > getClientHeight()))
+		function load(_img) {
+			if (_img !== undefined && (_img.target.width > clientWidth() || _img.target.height > clientHeight()))
 				style['background-size'] = 'contain'
 
 			$a.css(style)
@@ -101,10 +108,12 @@
 			elem = null
 		}
 
-		elem.onload = loaded
-		elem.onerror = function onerror() {
+		elem.onload = load
+		elem.onerror = function() {
 			style['background-image'] = _error
-			loaded()
+			$a[0].textContent = settings.errorText
+			load()
+			setTimeout(function() { hideImage($a[0]) }, 5000)
 		}
 		elem.src = img
 
@@ -118,9 +127,9 @@
 			_inDom = true
 		}
 
-		$a.css('display', 'block')
+		$a.css('display', 'flex')
 		$a.focus() // enable ESC
-		window.requestAnimationFrame(function() {
+		window.requestAnimationFrame(function rAF() {
 			$a.css('opacity', '1')
 		})
 	}
