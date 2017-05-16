@@ -59,13 +59,13 @@
 		return function _hideImage(elem) {
 			window.requestAnimationFrame(function() {
 				elem.style.opacity = '0'
+				elem.classList.remove(cls)
 			})
-			elem.classList.remove(cls)
 
 			elem.addEventListener('transitionend', function hide() {
+				elem.removeEventListener('transitionend', hide)
 				elem.style.display = 'none'
 				elem.style.backgroundImage = _loading
-				elem.removeEventListener('transitionend', hide)
 			})
 		}
 	}
@@ -92,8 +92,8 @@
 		$a.prop('href', url)
 
 		var elem = new Image()
-		function loaded(e) {
-			if (e !== undefined && (e.target.width > getClientWidth() || e.target.height > getClientHeight()))
+		function loaded(_img) {
+			if (_img !== undefined && (_img.target.width > getClientWidth() || _img.target.height > getClientHeight()))
 				style['background-size'] = 'contain'
 
 			$a.css(style)
@@ -102,7 +102,7 @@
 		}
 
 		elem.onload = loaded
-		elem.onerror = function(e) {
+		elem.onerror = function onerror() {
 			style['background-image'] = _error
 			loaded()
 		}
@@ -131,7 +131,7 @@
 			hideImage(e.currentTarget)
 	}
 
-	$.fn.plainbox = function(selector, options) {
+	$.fn.plainbox = function plainbox(selector, options) {
 		if (options) {
 			settings = $.extend(settings, options)
 			hideImage = _hideImage(settings.inClass)
