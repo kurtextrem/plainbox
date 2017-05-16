@@ -73,6 +73,7 @@
 				elem.style.display = 'none'
 				elem.style.backgroundSize = 'initial'
 				elem.style.backgroundImage = _loading
+				elem.textContent = ''
 			})
 		}
 	}
