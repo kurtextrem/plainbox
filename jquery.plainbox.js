@@ -52,8 +52,7 @@
 				// Text
 				'justify-content': 'center',
 				'align-items': 'center',
-				'text-decoration': 'none',
-				color: 'inherit'
+				'text-decoration': 'none'
 			})
 	})()
 
