@@ -41,13 +41,13 @@
 				left: '0',
 				right: '0',
 				bottom: '0',
-				background: 'rgba(0, 0, 0, 0.8) center center no-repeat',
+				background: 'rgba(0, 0, 0, 0.85) center center no-repeat',
 				'background-image': _loading,
 				'z-index': '99999',
 				contain: 'strict',
 				opacity: '0',
+				'will-change': 'opacity',
 				transition: 'opacity 300ms ease-in-out'
-				// is creating an additional layer worth it?
 			})
 	})()
 
