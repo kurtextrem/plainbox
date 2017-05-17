@@ -46,7 +46,7 @@
 	 * @kind jQuery Object
 	 */
 	var NODE = null
-	function getNode(loadingURL) {
+	function getNode(_loading) {
 		return $(document.createElement('a'))
 			.css({
 				display: 'flex',
@@ -56,7 +56,7 @@
 				right: '0',
 				bottom: '0',
 				background: 'rgba(0, 0, 0, 0.85) center center no-repeat',
-				'background-image': loadingURL,
+				'background-image': _loading,
 				'z-index': '99999',
 				contain: 'strict',
 				opacity: '0',
@@ -99,6 +99,8 @@
 		}
 	}
 
+	function getUrlValue(string) { return 'url("' + string + '")' }
+
 	function Plainbox(settings) {
 		/** @see SETTINGS */
 		this.settings = settings
@@ -110,14 +112,13 @@
 		*/
 		this.selector = '.' + settings.className
 
-		this._loading = 'url("' + settings.loadingURL + '")' // loading animation
-		this._error = 'url("' + settings.errorURL + '")'
+		this._loading = getUrlValue(settings.loadingURL) // loading animation
+		this._error = getUrlValue(settings.errorURL)
+
 		this.hide = _hide(settings.inClass, this._loading)
+		this.parent = $(settings.parent || document.body)
 
-		if (!settings.parent)
-			settings.parent = $(document.body)
-
-		settings.parent.on('click' + this.selector + ' keyup' + this.selector, this.selector, this.closeEvent.bind(this)) // click / ESC on plainbox image
+		this.parent.on('click' + this.selector + ' keyup' + this.selector, this.selector, this.closeEvent.bind(this)) // click / ESC on plainbox image
 		$(window).on('popstate' + this.selector, this.onPopState.bind(this))
 	}
 	var proto = Plainbox.prototype
@@ -146,24 +147,25 @@
 	}
 
 	proto.show = function show(img, url) {
-		var $a = NODE,
-			elem = new Image()
+		var elem = NODE[0],
+			img = new Image()
 
-		$a.prop('href', url)
-		style['background-image'] = 'url("' + img + '")'
+		elem.href = url
+		style['background-image'] = getUrlValue(img)
 
-		elem.onload = load
-		elem.onerror = function onerror() {
+		img.onload = load
+		img.onerror = function onerror() {
 			style['background-image'] = this._error
-			$a[0].textContent = this.settings.error
+			elem.textContent = this.settings.error
+
 			load()
 
 			window.clearTimeout(_t)
 			_t = window.setTimeout(function timeout() { this.hide() }.bind(this), 5000)
 		}.bind(this)
 
-		elem.src = img
-		elem = null
+		img.src = img
+		img = null // free for GC
 
 		this.showNode()
 	}
@@ -173,18 +175,20 @@
 	/** Shows/appends the node to the DOM. */
 	proto.showNode = function showNode() {
 		var settings = this.settings,
-			$a = NODE
+			elem = NODE[0]
+
 		if (!_inDom) {
 			_inDom = true
-			settings.parent.append($a)
+			this.parent.append(elem)
 		}
 
-		$a.prop('id', settings.id) // set ID / class to this instance
-			.addClass(settings.className, settings.inClass)
-			.css('display', 'flex')
-			.focus() // enable ESC
+		elem.id = settings.id
+		elem.className = settings.className + ' ' + settings.inClass // set ID / class to this instance
+		elem.style.display = 'flex'
+		elem.focus() // enable "ESC"
+
 		window.requestAnimationFrame(function rAF() {
-			$a.css('opacity', '1')
+			elem.style.opacity = '1'
 		})
 	}
 
