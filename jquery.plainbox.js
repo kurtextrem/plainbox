@@ -20,6 +20,7 @@
 	}
 
 	var settings = {
+		id: 'plainbox',
 		className: 'plainbox',
 		inClass: 'in',
 		parent: null, // jQuery selector
@@ -33,8 +34,8 @@
 
 	var _loading = 'url("' + settings.loadingURL + '")', // loading animation
 		_error = 'url("' + settings.errorURL + '")'
-	settings._$a = (function() {
-		return $('<a class="' + settings.className + ' ' + settings.inClass + '" style=""></a>')
+	function get$a() {
+		return $('<a id="' + settings.id + '" class="' + settings.className + ' ' + settings.inClass + '"></a>')
 			.css({
 				display: 'flex',
 				position: 'fixed',
@@ -54,23 +55,23 @@
 				'align-items': 'center',
 				'text-decoration': 'none'
 			})
-	})()
+	}
 
-	settings._selector = (function() {
+	function getSelector() {
 		return '.' + settings.className
-	})()
+	}
 
 	var _t = null, // timeout
 		style = {
 			'background-image': '',
 			'background-size': ''
 		}
-	function _hideImage(cls) {
-		return function _hideImage(elem) {
+	function _hide(inClass, elem) {
+		return function hide() {
 			window.clearTimeout(_t)
 			window.requestAnimationFrame(function rAF() {
 				elem.style.opacity = '0'
-				elem.classList.remove(cls)
+				elem.classList.remove(inClass)
 			})
 
 			elem.addEventListener('transitionend', function hide() {
@@ -83,8 +84,9 @@
 			})
 		}
 	}
-	var hideImage = _hideImage(settings.inClass)
+	var hide = function() { }
 
+	var originalURL = location.href
 	function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
@@ -92,11 +94,17 @@
 
 		e.preventDefault()
 
-		showImage(e.currentTarget.dataset.image || url, url)
+		var img = e.currentTarget.dataset.image || url
+		show(img, url)
+
+		originalURL = location.href
+		var hash = location.hash.indexOf('open') === -1 ? '#open' : ''
+		window.history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url + hash) // location.href
+
 		return false
 	}
 
-	function showImage(img, url) {
+	function show(img, url) {
 		var $a = settings._$a
 
 		$a.prop('href', url)
@@ -117,7 +125,7 @@
 			style['background-image'] = _error
 			$a[0].textContent = settings.error
 			load()
-			_t = setTimeout(function() { hideImage($a[0]) }, 5000)
+			_t = setTimeout(function() { hide() }, 5000)
 		}
 		elem.src = img
 
@@ -127,8 +135,8 @@
 	var _inDom = false
 	function append$a($a) {
 		if (!_inDom) {
-			settings.parent.append($a)
 			_inDom = true
+			settings.parent.append($a)
 		}
 
 		$a.css('display', 'flex')
@@ -140,21 +148,37 @@
 
 	function closeEvent(e) {
 		e.preventDefault()
-		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27))
-			hideImage(e.currentTarget)
+		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
+			window.history.pushState({ plainbox: false }, '', originalURL)
+			hide()
+		}
+	}
+
+	function onPopState(e) {
+		var state = e.originalEvent.state
+		if (state === null || !state.plainbox)
+			hide()
+		else if (state.plainbox) {
+			show(state.plainboxImg, state.plainboxUrl)
+		}
 	}
 
 	$.fn.plainbox = function plainbox(selector, options) {
-		if (options) {
+		if (options)
 			settings = $.extend(settings, options)
-			hideImage = _hideImage(settings.inClass)
-		}
 		if (!settings.parent)
 			settings.parent = $(document.body)
 
-		var _selector = settings._selector
-		this.on('click' + _selector, selector, clickEvent) // click on any thumb
-		settings.parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent) // click / ESC on plainbox image
+		var _s = settings._selector = getSelector()
+		settings._$a = get$a()
+		hide = _hide(settings.inClass, settings._$a[0])
+
+		this.on('click' + _s, selector, clickEvent) // click on any thumb
+		settings.parent.on('click' + _s + ' keyup' + _s, _s, closeEvent) // click / ESC on plainbox image
+		$(window).on('popstate' + _s, onPopState)
+
+		if (location.hash.indexOf('open') !== -1)
+			$(selector)[0].click()
 
 		return this
 	}
