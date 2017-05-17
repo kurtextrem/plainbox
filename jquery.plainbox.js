@@ -69,15 +69,18 @@
 			})
 	}
 
-	var _t = null, // timeout
-		style = {
-			'background-image': '',
-			'background-size': ''
-		}
+	var _t = null // timeout
+	var style = {
+		'background-image': '',
+		'background-size': ''
+	}
+	var originalURL = location.href
+
 	function _hide(inClass, _loading) {
 		return function hide() {
 			var elem = NODE[0]
 			window.clearTimeout(_t)
+
 			window.requestAnimationFrame(function rAF() {
 				elem.style.opacity = '0'
 				elem.classList.remove(inClass)
@@ -91,6 +94,8 @@
 				style['background-size'] = ''
 				elem.textContent = ''
 			})
+
+			history.replaceState({ plainbox: false }, '', originalURL)
 		}
 	}
 
@@ -117,7 +122,6 @@
 	}
 	var proto = Plainbox.prototype
 
-	var originalURL = location.href
 	proto.clickEvent = function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
@@ -187,7 +191,6 @@
 	proto.closeEvent = function closeEvent(e) {
 		e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
-			history.replaceState({ plainbox: false }, '', originalURL)
 			this.hide()
 		}
 	}
