@@ -2,6 +2,7 @@
 	'use strict'
 
 	var document = window.document,
+		history = window.history,
 		_clientWidth = null,
 		_clientHeight = null
 
@@ -19,7 +20,10 @@
 		return _clientHeight
 	}
 
-	var settings = {
+	/**
+	 * @const
+	 */
+	var SETTINGS = {
 		id: 'plainbox',
 		className: 'plainbox',
 		inClass: 'in',
@@ -33,26 +37,17 @@
 
 		loadingURL: 'https://s4db.net/assets/img/goalpost.gif',
 		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
-		error: 'Error',
-
-		/**
-		 * Holds the Plainbox.
-		 * @type {jQuery}
-		 * @kind jQuery Object
-		 */
-		_$a: null,
-		/**
-		 * Selector of the Plainbox.
-		 * @type {string}
-		 * @kind jQuery Selector
-		 */
-		_selector: ''
+		error: 'Error'
 	}
 
-	var _loading = 'url("' + settings.loadingURL + '")', // loading animation
-		_error = 'url("' + settings.errorURL + '")'
-	function getNode() {
-		return $('<a id="' + settings.id + '" class="' + settings.className + ' ' + settings.inClass + '"></a>')
+	/**
+	 * Holds the Plainbox.
+	 * @type {jQuery}
+	 * @kind jQuery Object
+	 */
+	var NODE = null
+	function getNode(loadingURL) {
+		return $(document.createElement('a'))
 			.css({
 				display: 'flex',
 				position: 'fixed',
@@ -61,7 +56,7 @@
 				right: '0',
 				bottom: '0',
 				background: 'rgba(0, 0, 0, 0.85) center center no-repeat',
-				'background-image': _loading,
+				'background-image': loadingURL,
 				'z-index': '99999',
 				contain: 'strict',
 				opacity: '0',
@@ -74,17 +69,14 @@
 			})
 	}
 
-	function getSelector() {
-		return '.' + settings.className
-	}
-
 	var _t = null, // timeout
 		style = {
 			'background-image': '',
 			'background-size': ''
 		}
-	function _hide(inClass, elem) {
+	function _hide(inClass, _loading) {
 		return function hide() {
+			var elem = NODE[0]
 			window.clearTimeout(_t)
 			window.requestAnimationFrame(function rAF() {
 				elem.style.opacity = '0'
@@ -101,10 +93,32 @@
 			})
 		}
 	}
-	var hide = function() { }
+
+	function Plainbox(settings) {
+		/** @see SETTINGS */
+		this.settings = settings
+
+		/**
+		* Selector of the Plainbox.
+		* @type {string}
+		* @kind jQuery Selector
+		*/
+		this.selector = '.' + settings.className
+
+		this._loading = 'url("' + settings.loadingURL + '")' // loading animation
+		this._error = 'url("' + settings.errorURL + '")'
+		this.hide = _hide(settings.inClass, this._loading)
+
+		if (!settings.parent)
+			settings.parent = $(document.body)
+
+		settings.parent.on('click' + this.selector + ' keyup' + this.selector, this.selector, this.closeEvent.bind(this)) // click / ESC on plainbox image
+		$(window).on('popstate' + this.selector, this.onPopState.bind(this))
+	}
+	var proto = Plainbox.prototype
 
 	var originalURL = location.href
-	function clickEvent(e) {
+	proto.clickEvent = function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
 		if (!url) return true
@@ -112,98 +126,99 @@
 		e.preventDefault()
 
 		var img = e.currentTarget.dataset.image || url // either take data-image or href / src
-		show(img, url)
+		this.show(img, url)
 
 		originalURL = location.href
-		var hash = location.hash.indexOf('view') === -1 ? '#view' : ''
-		window.history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url + hash) // location.href
+		history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', location.href) // location.href | url
 
 		return false
 	}
 
-	function show(img, url) {
-		var $a = settings._$a
+	function load(e) {
+		if (e !== undefined && (e.target.width > clientWidth() || e.target.height > clientHeight()))
+			style['background-size'] = 'contain'
+
+		NODE.css(style)
+	}
+
+	proto.show = function show(img, url) {
+		var $a = NODE,
+			elem = new Image()
 
 		$a.prop('href', url)
 		style['background-image'] = 'url("' + img + '")'
 
-		var elem = new Image()
-		function load(_img) {
-			if (_img !== undefined && (_img.target.width > clientWidth() || _img.target.height > clientHeight()))
-				style['background-size'] = 'contain'
-
-			$a.css(style)
-
-			elem = null
-		}
-
 		elem.onload = load
-		elem.onerror = function() {
-			style['background-image'] = _error
-			$a[0].textContent = settings.error
+		elem.onerror = function onerror() {
+			style['background-image'] = this._error
+			$a[0].textContent = this.settings.error
 			load()
-			_t = setTimeout(function() { hide() }, 5000)
-		}
-		elem.src = img
 
-		appendNode()
+			window.clearTimeout(_t)
+			_t = window.setTimeout(function timeout() { this.hide() }.bind(this), 5000)
+		}.bind(this)
+
+		elem.src = img
+		elem = null
+
+		this.showNode()
 	}
 
 	/** Whether the Node has been appended or not. */
 	var _inDom = false
-	/** Appends the node to the DOM. */
-	function appendNode() {
-		var $a = settings._$a
+	/** Shows/appends the node to the DOM. */
+	proto.showNode = function showNode() {
+		var settings = this.settings,
+			$a = NODE
 		if (!_inDom) {
 			_inDom = true
 			settings.parent.append($a)
 		}
 
-		$a.css('display', 'flex')
-		$a.focus() // enable ESC
+		$a.prop('id', settings.id) // set ID / class to this instance
+			.addClass(settings.className, settings.inClass)
+			.css('display', 'flex')
+			.focus() // enable ESC
 		window.requestAnimationFrame(function rAF() {
 			$a.css('opacity', '1')
 		})
 	}
 
-	function closeEvent(e) {
+	proto.closeEvent = function closeEvent(e) {
 		e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
-			window.history.pushState({ plainbox: false }, '', originalURL)
-			hide()
+			history.replaceState({ plainbox: false }, '', originalURL)
+			this.hide()
 		}
 	}
 
-	function onPopState(e) {
+	proto.onPopState = function onPopState(e) {
 		var state = e.originalEvent.state
 		if (state === null || !state.plainbox)
-			hide()
+			this.hide()
 		else if (state.plainbox) {
-			show(state.plainboxImg, state.plainboxUrl)
+			this.show(state.plainboxImg, state.plainboxUrl)
 		}
 	}
 
 	/**
-	 * @param 	{string} selector - jQuery selector for elements which trigger the Plainbox
+	 * @param 	{string} selector jQuery selector for elements which trigger the Plainbox
 	 * @param 	{object} options
-	 * @returns {jQuery} 					- Chainable
+	 * @returns {jQuery} 					Chainable
 	 */
 	$.fn.plainbox = function plainbox(selector, options) {
-		if (options !== undefined)
-			settings = $.extend(settings, options)
-		if (!settings.parent)
-			settings.parent = $(document.body)
+		var settings = $.extend(SETTINGS, options || {}),
+			instance = new Plainbox(settings)
 
-		var _s = settings._selector = getSelector()
-		settings._$a = getNode()
-		hide = _hide(settings.inClass, settings._$a[0])
+		if (!_inDom) // only create node once
+			NODE = getNode(instance._loading)
 
-		this.on('click' + _s, selector, clickEvent) // click on any thumb
-		settings.parent.on('click' + _s + ' keyup' + _s, _s, closeEvent) // click / ESC on plainbox image
-		$(window).on('popstate' + _s, onPopState)
+		this.on('click' + instance.selector, selector, instance.clickEvent.bind(instance)) // click on any thumb
 
-		if (location.hash.indexOf('view') !== -1)
-			$(selector)[0].click()
+		var state = history.state
+		if (state.plainboxImg !== undefined) { // we recover state after browser restart etc
+			instance.show(state.plainboxImg, state.plainboxUrl)
+		}
 
 		return this
 	}

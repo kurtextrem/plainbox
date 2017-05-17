@@ -4,18 +4,24 @@
 	<title>Plainbox - Really simple image lightbox jQuery plugin.</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
 	<style>
-		.images {
+		div {
 			padding: 2rem 0;
 			text-align: center;
 		}
 
-		.images a {
+		div>a {
 			display: inline-block;
 			max-width: 25%;
 		}
 
 		img {
 			max-width: 100%;
+		}
+
+		.plainbox {
+			/** Error msg */
+			color: red;
+			font-size: 13px;
 		}
 	</style>
 </head>
@@ -24,9 +30,25 @@
 		<a href="http://lorempixel.com/1000/1000/?1">
 			<img src="http://lorempixel.com/400/400/?1">
 		</a>
+		<!-- Error case -->
 		<a href="https://s4db.net/assets/img/error.png">
 			<img src="http://lorempixel.com/400/400/?2">
 		</a>
+		<!-- Cached image -->
+		<a href="https://s4db.net/assets/img/images.png">
+			<img src="https://s4db.net/assets/img/newsfeed/banner.png">
+		</a>
+	</div>
+
+	<div class="images2">
+		<a href="http://lorempixel.com/1000/1000/?1">
+			<img src="http://lorempixel.com/400/400/?1">
+		</a>
+		<!-- Error case -->
+		<a href="https://s4db.net/assets/img/error.png">
+			<img src="http://lorempixel.com/400/400/?2">
+		</a>
+		<!-- Cached image -->
 		<a href="https://s4db.net/assets/img/images.png">
 			<img src="https://s4db.net/assets/img/newsfeed/banner.png">
 		</a>
@@ -37,6 +59,11 @@
 	<script>
 		$.fn.ready(function() {
 			$('.images').plainbox('a')
+			$('.images2').plainbox('img', {
+				id: 'plainbox2',
+				className: 'plainbox2',
+				inClass: 'show'
+			})
 		})
 	</script>
 </body>
