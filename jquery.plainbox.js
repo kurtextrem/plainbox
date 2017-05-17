@@ -23,18 +23,35 @@
 		id: 'plainbox',
 		className: 'plainbox',
 		inClass: 'in',
-		parent: null, // jQuery selector
+
+		/**
+		 * Parent of the Plainbox.
+		 * @type {string}
+		 * @kind jQuery Selector
+		 */
+		parent: null,
+
 		loadingURL: 'https://s4db.net/assets/img/goalpost.gif',
 		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
 		error: 'Error',
 
+		/**
+		 * Holds the Plainbox.
+		 * @type {jQuery}
+		 * @kind jQuery Object
+		 */
 		_$a: null,
+		/**
+		 * Selector of the Plainbox.
+		 * @type {string}
+		 * @kind jQuery Selector
+		 */
 		_selector: ''
 	}
 
 	var _loading = 'url("' + settings.loadingURL + '")', // loading animation
 		_error = 'url("' + settings.errorURL + '")'
-	function get$a() {
+	function getNode() {
 		return $('<a id="' + settings.id + '" class="' + settings.className + ' ' + settings.inClass + '"></a>')
 			.css({
 				display: 'flex',
@@ -94,11 +111,11 @@
 
 		e.preventDefault()
 
-		var img = e.currentTarget.dataset.image || url
+		var img = e.currentTarget.dataset.image || url // either take data-image or href / src
 		show(img, url)
 
 		originalURL = location.href
-		var hash = location.hash.indexOf('open') === -1 ? '#open' : ''
+		var hash = location.hash.indexOf('view') === -1 ? '#view' : ''
 		window.history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url + hash) // location.href
 
 		return false
@@ -129,11 +146,14 @@
 		}
 		elem.src = img
 
-		append$a($a)
+		appendNode()
 	}
 
+	/** Whether the Node has been appended or not. */
 	var _inDom = false
-	function append$a($a) {
+	/** Appends the node to the DOM. */
+	function appendNode() {
+		var $a = settings._$a
 		if (!_inDom) {
 			_inDom = true
 			settings.parent.append($a)
@@ -163,21 +183,26 @@
 		}
 	}
 
+	/**
+	 * @param 	{string} selector - jQuery selector for elements which trigger the Plainbox
+	 * @param 	{object} options
+	 * @returns {jQuery} 					- Chainable
+	 */
 	$.fn.plainbox = function plainbox(selector, options) {
-		if (options)
+		if (options !== undefined)
 			settings = $.extend(settings, options)
 		if (!settings.parent)
 			settings.parent = $(document.body)
 
 		var _s = settings._selector = getSelector()
-		settings._$a = get$a()
+		settings._$a = getNode()
 		hide = _hide(settings.inClass, settings._$a[0])
 
 		this.on('click' + _s, selector, clickEvent) // click on any thumb
 		settings.parent.on('click' + _s + ' keyup' + _s, _s, closeEvent) // click / ESC on plainbox image
 		$(window).on('popstate' + _s, onPopState)
 
-		if (location.hash.indexOf('open') !== -1)
+		if (location.hash.indexOf('view') !== -1)
 			$(selector)[0].click()
 
 		return this
