@@ -21,9 +21,19 @@
 		}
 
 		.plainbox {
-			/** Error msg */
+			/** Error msg color */
 			color: red;
+			/** Move error text 10px towards the bottom */
+			padding-top: 10px;
 			font-size: 13px;
+		}
+
+		.plainbox[aria-hidden="false"] {
+			/** Plainbox is visible */
+		}
+
+		.plainbox[aria-hidden="true"] {
+			/** Plainbox is hidden */
 		}
 	</style>
 </head>
@@ -63,8 +73,7 @@
 			$('.images').plainbox('a')
 			$('.images2').plainbox('img', {
 				id: 'plainbox2',
-				className: 'plainbox2',
-				inClass: 'show'
+				className: 'plainbox2'
 			})
 		})
 	</script>

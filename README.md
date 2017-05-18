@@ -16,39 +16,58 @@ And again, all you need is **jquery.plainbox.js** (it's around 200 lines of code
 
 The idea of this markup is that &lt;a&gt; tag has a big image and &lt;img&gt; has a thumbnail.
 
-    <a href="big-image.jpg">
-        <img src="thumbnail-image.jpg">
-    </a>
+		<a href="big-image.jpg">
+				<img src="thumbnail-image.jpg">
+		</a>
 
 Or you can use just &lt;img&gt; tag. In this case, you will get the same image in the lightbox.
 
-    <img src="image.jpg">
+		<img src="image.jpg">
 
 You can also give a story link (e.g. where comments are).
 
-    <a href="/picture/1234" data-image="big-image.jpg">
-        <img src="thumbnail-image.jpg">
-    </a>
+		<a href="/picture/1234" data-image="big-image.jpg">
+				<img src="thumbnail-image.jpg">
+		</a>
 
 ## Javascript
 
-    jQuery(function ($) {
-        $('body').plainbox('a');
-    });
+		$.fn.ready(function () {
+			$('.some--container').plainbox('img', {
+				id: 'plainbox',             // The id of the plainbox (default: plainbox)
+				className: 'plainbox',      // The class name of the plainbox (default: plainbox)
+				parent: $(document.body)    // Where the plainbox is appended to (default: document.body)
+
+				loadingURL: 'someGif',      // URL to a loading animation
+
+				errorURL: '',               // URL to an error image
+				error: ''                   // Error text to display
+				errorTimeout: 5000          // Milliseconds after which to close the error image (default: 5000 ms)
+			})
+		})
 
 Or:
 
-    $.fn.ready(function () {
-        $('.some--container').plainbox('img', {
-                id: 'plainbox',             // default; The id of the plainbox
-                className: 'plainbox',      // default; The class name of the plainbox
-                inClass: 'in',              // default; The class is added when the plainbox is visible
-                parent: $(document.body)    // default; Where the plainbox is appended to
-                loadingURL: 'someGif',      // please don't hotlink; Use your own animation
-                errorURL: '',               // if the image could not be loaded it displays the errorURL image
-                error: ''                   // error text to display
-            })
-    })
+		jQuery(function ($) {
+			$('body').plainbox('a');
+		});
+
+## Styling with CSS
+
+```css
+.plainbox {
+	color: blue; /** Error msg color */
+	padding-top: 10px; /** Move error text 10px towards the bottom */
+}
+
+.plainbox[aria-hidden="false"] {
+	/** Plainbox is visible */
+}
+
+.plainbox[aria-hidden="true"] {
+	/** Plainbox is hidden */
+}
+```
 
 ## Note
 

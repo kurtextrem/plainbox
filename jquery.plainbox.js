@@ -26,7 +26,6 @@
 	var SETTINGS = {
 		id: 'plainbox',
 		className: 'plainbox',
-		inClass: 'in',
 
 		/**
 		 * Parent of the Plainbox.
@@ -36,8 +35,10 @@
 		parent: null,
 
 		loadingURL: 'https://s4db.net/assets/img/goalpost.gif',
+
 		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
-		error: 'Error'
+		error: 'Error',
+		errorTimeout: 5000
 	}
 
 	/**
@@ -69,7 +70,7 @@
 			})
 	}
 
-	var _t = null // timeout
+	var _timeout = null // timeout
 	var style = {
 		'background-image': '',
 		'background-size': ''
@@ -78,21 +79,21 @@
 
 	function _hide(inClass, _loading) {
 		return function hide() {
-			var elem = NODE[0]
-			window.clearTimeout(_t)
+			var el = NODE[0]
+			window.clearTimeout(_timeout)
 
 			window.requestAnimationFrame(function rAF() {
-				elem.style.opacity = '0'
-				elem.classList.remove(inClass)
+				el.style.opacity = '0'
+				el.setAttribute('aria-hidden', 'true')
 			})
 
-			elem.addEventListener('transitionend', function hide() {
-				elem.removeEventListener('transitionend', hide)
-				elem.style.display = 'none'
-				elem.style.backgroundImage = _loading
-				elem.style.backgroundSize = ''
+			el.addEventListener('transitionend', function hide() {
+				el.removeEventListener('transitionend', hide)
+				el.style.display = 'none'
+				el.style.backgroundImage = _loading
+				el.style.backgroundSize = ''
 				style['background-size'] = ''
-				elem.textContent = ''
+				el.textContent = ''
 			})
 
 			history.replaceState({ plainbox: false }, '', originalURL)
@@ -119,7 +120,7 @@
 		this.parent = $(settings.parent || document.body)
 
 		this.parent.on('click' + this.selector + ' keyup' + this.selector, this.selector, this.closeEvent.bind(this)) // click / ESC on plainbox image
-		$(window).on('popstate' + this.selector, this.onPopState.bind(this))
+		$(window).off('popstate.plainbox').on('popstate.plainbox', this.onPopState.bind(this)) // we only want one popstate listener at the same time
 	}
 	var proto = Plainbox.prototype
 
@@ -139,32 +140,40 @@
 		return false
 	}
 
-	function load(e) {
+	function _show(e) {
 		if (e !== undefined && (e.target.width > clientWidth() || e.target.height > clientHeight()))
 			style['background-size'] = 'contain'
 
 		NODE.css(style)
 	}
 
-	proto.show = function show(img, url) {
+	function loadImg(imgURL, url) {
 		var elem = NODE[0],
 			img = new Image()
 
 		elem.href = url
-		style['background-image'] = getUrlValue(img)
+		style['background-image'] = getUrlValue(imgURL)
 
-		img.onload = load
+		img.onload = _show
+
+		img.src = imgURL
+		return img
+	}
+
+	proto.show = function show(imgURL, url) {
+		var img = loadImg(imgURL, url)
 		img.onerror = function onerror() {
 			style['background-image'] = this._error
-			elem.textContent = this.settings.error
+			NODE[0].textContent = this.settings.error
 
-			load()
+			_show()
 
-			window.clearTimeout(_t)
-			_t = window.setTimeout(function timeout() { this.hide() }.bind(this), 5000)
+			if (this.settings.errorTimeout) {
+				window.clearTimeout(_timeout)
+				_timeout = window.setTimeout(function timeout() { this.hide() }.bind(this), this.settings.errorTimeout)
+			}
 		}.bind(this)
 
-		img.src = img
 		img = null // free for GC
 
 		this.showNode()
@@ -183,7 +192,8 @@
 		}
 
 		elem.id = settings.id
-		elem.className = settings.className + ' ' + settings.inClass // set ID / class to this instance
+		elem.className = settings.className // set ID / class to this instance
+		elem.setAttribute('aria-hidden', 'false')
 		elem.style.display = 'flex'
 		elem.focus() // enable "ESC"
 
