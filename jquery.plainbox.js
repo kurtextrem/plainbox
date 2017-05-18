@@ -56,7 +56,8 @@
 	 * @type {jQuery}
 	 * @kind jQuery Object
 	 */
-	var NODE = null
+	var NODE = null,
+		nodeIsVisible = false
 	function getNode(_loading) {
 		return $(document.createElement('a'))
 			.css({
@@ -95,6 +96,7 @@
 			window.requestAnimationFrame(function rAF() {
 				el.style.opacity = '0'
 				el.setAttribute('aria-hidden', 'true')
+				nodeIsVisible = false
 			})
 
 			el.addEventListener('transitionend', function hide() {
@@ -215,6 +217,7 @@
 
 		window.requestAnimationFrame(function rAF() {
 			elem.style.opacity = '1'
+			nodeIsVisible = true
 		})
 	}
 
@@ -228,12 +231,11 @@
 
 	proto.onPopState = function onPopState(e) {
 		var state = e.originalEvent.state
-		if (state === null || state.plainbox === undefined) return // not our business
-
-		if (state.plainbox === false)
-			this.hide()
-		else
+		if (state !== null && state.plainbox !== undefined) {
 			this.show(state.plainboxImg, state.plainboxUrl)
+		} else if (nodeIsVisible) {
+			this.hide()
+		}
 	}
 
 	/**
@@ -251,11 +253,11 @@
 		this.on('click' + instance.selector, selector, instance.clickEvent.bind(instance)) // click on any thumb
 
 		var state = history.state
-		if (state === null) {
+		if (state === null) { // new state, add closed state
 			history.replaceState(_stateFalse, '', location.href)
 		} else if (state.plainbox === true) { // we recover state after browser restart etc
 			instance.show(state.plainboxImg, state.plainboxUrl)
-		} else {
+		} else { // add to current state
 			state.plainbox = false
 		}
 
