@@ -231,7 +231,7 @@
 
 	proto.onPopState = function onPopState(e) {
 		var state = e.originalEvent.state
-		if (state !== null && state.plainbox !== undefined) {
+		if (state !== null && state.plainbox === true) {
 			this.show(state.plainboxImg, state.plainboxUrl)
 		} else if (nodeIsVisible) {
 			this.hide()
