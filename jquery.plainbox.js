@@ -1,3 +1,13 @@
+/*
+ * plainbox - Really simple jQuery image lightbox plugin.
+ *
+ * https://github.com/kurtextrem/plainbox
+ * (forked from, but completely rewritten: https://github.com/starikovs/stupidbox)
+ *
+ * @license MIT
+ * @copyright Jacob "kurtextrem" Groß 2017
+ */
+/*! @url github.com/kurtextrem/plainbox | @license MIT | @copyrightJacob "kurtextrem" Groß 2017 */
 (function(window, $) {
 	'use strict'
 
