@@ -42,13 +42,23 @@
 		 * @type {string}
 		 * @kind jQuery Selector
 		 */
-		parent: null,
+		parent: '',
 
 		loadingURL: 'https://s4db.net/assets/img/goalpost.gif',
 
 		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
 		error: 'Error',
-		errorTimeout: 5000
+		errorTimeout: 5000,
+
+		/**
+		* Selector of the Plainbox.
+		* @type {string}
+		* @kind jQuery Selector
+		*/
+		_selector: '',
+		_loading: '',
+		_error: '',
+		_parent: null
 	}
 
 	/**
@@ -88,55 +98,10 @@
 	}
 	var originalURL = location.href
 
-	function _hide(_loading) {
-		return function hide() {
-			var el = NODE[0]
-			window.clearTimeout(_timeout)
-
-			window.requestAnimationFrame(function rAF() {
-				el.style.opacity = '0'
-				el.setAttribute('aria-hidden', 'true')
-				nodeIsVisible = false
-			})
-
-			el.addEventListener('transitionend', function hide() {
-				el.removeEventListener('transitionend', hide)
-				el.style.display = 'none'
-				el.style.backgroundImage = _loading
-				el.style.backgroundSize = ''
-				style['background-size'] = ''
-				el.textContent = ''
-			})
-		}
-	}
-
 	function getUrlValue(string) { return 'url("' + string + '")' }
 
-	function Plainbox(settings) {
-		/** @see SETTINGS */
-		this.settings = settings
-
-		/**
-		* Selector of the Plainbox.
-		* @type {string}
-		* @kind jQuery Selector
-		*/
-		this.selector = '.' + settings.className
-
-		this._loading = getUrlValue(settings.loadingURL) // loading animation
-		this._error = getUrlValue(settings.errorURL)
-
-		this.hide = _hide(this._loading)
-		this.parent = $(settings.parent || document.body)
-
-		this.parent.on('click' + this.selector + ' keyup' + this.selector, this.selector, this.closeEvent.bind(this)) // click / ESC on plainbox image
-		$(window).off('popstate.plainbox').on('popstate.plainbox', this.onPopState.bind(this)) // we only want one popstate listener at the same time
-	}
-
-	var proto = Plainbox.prototype
-
 	var _state = { plainbox: true, plainboxUrl: '', plainboxImg: '' }
-	proto.clickEvent = function clickEvent(e) {
+	function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
 		if (!url) return true
@@ -144,7 +109,7 @@
 		e.preventDefault()
 
 		var img = e.currentTarget.dataset.image || url // either take data-image or href / src
-		this.show(img, url)
+		show(this, img, url)
 
 		originalURL = location.href
 		_state.plainboxUrl = url
@@ -174,43 +139,62 @@
 		return img
 	}
 
+	function hide(settings) {
+		var el = NODE[0]
+		window.clearTimeout(_timeout)
+
+		window.requestAnimationFrame(function rAF() {
+			el.style.opacity = '0'
+			el.setAttribute('aria-hidden', 'true')
+			nodeIsVisible = false
+		})
+
+		el.addEventListener('transitionend', function hide() {
+			el.removeEventListener('transitionend', hide)
+			el.style.display = 'none'
+			el.style.backgroundImage = settings._loading
+			el.style.backgroundSize = ''
+			style['background-size'] = ''
+			el.textContent = ''
+		})
+	}
+
 	var _stateFalse = { plainbox: false }
-	proto.show = function show(imgURL, url) {
+	function show(settings, imgURL, url) {
 		var img = loadImg(imgURL, url)
 		img.onerror = function onerror() {
-			style['background-image'] = this._error
-			NODE[0].textContent = this.settings.error
+			style['background-image'] = settings._error
+			NODE[0].textContent = settings.error
 
 			_show()
 
-			if (this.settings.errorTimeout) {
+			if (settings.errorTimeout) {
 				window.clearTimeout(_timeout)
 				_timeout = window.setTimeout(function timeout() {
-					this.hide()
+					hide(settings)
 					history.replaceState(_stateFalse, '', originalURL)
-				}.bind(this), this.settings.errorTimeout)
+				}, settings.errorTimeout)
 			}
-		}.bind(this)
+		}
 
 		img = null // free for GC
 
-		this.showNode()
+		showNode(settings)
 	}
 
 	/** Whether the Node has been appended or not. */
 	var _inDom = false
 	/** Shows/appends the node to the DOM. */
-	proto.showNode = function showNode() {
-		var settings = this.settings,
-			elem = NODE[0]
+	function showNode(settings) {
+		var elem = NODE[0]
 
 		if (!_inDom) {
 			_inDom = true
-			this.parent.append(elem)
+			settings._parent.append(elem)
 		}
 
 		elem.id = settings.id
-		elem.className = settings.className // set ID / class to this instance
+		elem.className = settings.className // set ID / class
 		elem.setAttribute('aria-hidden', 'false')
 		elem.style.display = 'flex'
 		elem.focus() // enable "ESC"
@@ -221,20 +205,20 @@
 		})
 	}
 
-	proto.closeEvent = function closeEvent(e) {
+	function closeEvent(e) {
 		e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
-			this.hide()
+			hide(this)
 			history.replaceState(_stateFalse, '', originalURL)
 		}
 	}
 
-	proto.onPopState = function onPopState(e) {
+	function onPopState(e) {
 		var state = e.originalEvent.state
 		if (state !== null && state.plainbox === true) {
-			this.show(state.plainboxImg, state.plainboxUrl)
+			show(this, state.plainboxImg, state.plainboxUrl)
 		} else if (nodeIsVisible) {
-			this.hide()
+			hide(this)
 		}
 	}
 
@@ -244,19 +228,26 @@
 	 * @returns {jQuery} 					Chainable
 	 */
 	$.fn.plainbox = function plainbox(selector, options) {
-		var settings = $.extend(SETTINGS, options || {}),
-			instance = new Plainbox(settings)
+		var settings = $.extend(SETTINGS, options || {})
+
+		settings._loading = getUrlValue(settings.loadingURL) // loading animation
 
 		if (!_inDom) // only create node once
-			NODE = getNode(instance._loading)
+			NODE = getNode(settings._loading)
 
-		this.on('click' + instance.selector, selector, instance.clickEvent.bind(instance)) // click on any thumb
+		var _selector = settings._selector = '.' + settings.className
+		settings._error = getUrlValue(settings.errorURL)
+		settings._parent = $(settings.parent || document.body)
+
+		this.on('click' + _selector, selector, clickEvent.bind(settings)) // click on any thumb
+		settings._parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent.bind(settings)) // click / ESC on plainbox image
+		$(window).off('popstate.plainbox').on('popstate.plainbox', onPopState.bind(settings)) // we only want one popstate listener at the same time
 
 		var state = history.state
 		if (state === null) { // new state, add closed state
 			history.replaceState(_stateFalse, '', location.href)
 		} else if (state.plainbox === true) { // we recover state after browser restart etc
-			instance.show(state.plainboxImg, state.plainboxUrl)
+			show(settings, state.plainboxImg, state.plainboxUrl)
 		} else { // add to current state
 			state.plainbox = false
 		}
