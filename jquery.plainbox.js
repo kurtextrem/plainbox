@@ -245,8 +245,12 @@
 		this.on('click' + instance.selector, selector, instance.clickEvent.bind(instance)) // click on any thumb
 
 		var state = history.state
-		if (state !== null && state.plainbox === true) { // we recover state after browser restart etc
+		if (state === null) {
+			history.replaceState({ plainbox: false }, '', location.href)
+		} else if (state.plainbox === true) { // we recover state after browser restart etc
 			instance.show(state.plainboxImg, state.plainboxUrl)
+		} else {
+			state.plainbox = false
 		}
 
 		return this
