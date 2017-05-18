@@ -39,29 +39,29 @@
 </head>
 <body>
 	<div class="images">
-		<a href="http://lorempixel.com/1000/1000/?1">
+		<a href="" data-image="http://lorempixel.com/1000/1000/?1">
 			<img src="http://lorempixel.com/400/400/?1">
 		</a>
 		<!-- Error case -->
-		<a href="https://s4db.net/assets/img/error.png">
+		<a href="" data-image="https://s4db.net/assets/img/error.png">
 			<img src="http://lorempixel.com/400/400/?2">
 		</a>
 		<!-- Cached image -->
-		<a href="https://s4db.net/assets/img/images.png">
+		<a href="" data-image="https://s4db.net/assets/img/images.png">
 			<img src="https://s4db.net/assets/img/newsfeed/banner.png">
 		</a>
 	</div>
 
 	<div class="images2">
-		<a href="http://lorempixel.com/1000/1000/?1">
-			<img src="http://lorempixel.com/400/400/?1">
+		<a href="#" data-image="http://lorempixel.com/1000/1000/">
+			<img src="http://lorempixel.com/400/400/">
 		</a>
 		<!-- Error case -->
-		<a href="https://s4db.net/assets/img/error.png">
+		<a href="#" data-image="https://s4db.net/assets/img/error.png">
 			<img src="http://lorempixel.com/400/400/?2">
 		</a>
 		<!-- Cached image -->
-		<a href="https://s4db.net/assets/img/images.png">
+		<a href="#" data-image="https://s4db.net/assets/img/images.png">
 			<img src="https://s4db.net/assets/img/newsfeed/banner.png">
 		</a>
 	</div>
@@ -71,7 +71,7 @@
 	<script>
 		$.fn.ready(function() {
 			$('.images').plainbox('a')
-			$('.images2').plainbox('img', {
+			$('.images2').plainbox('a', {
 				id: 'plainbox2',
 				className: 'plainbox2'
 			})

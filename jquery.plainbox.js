@@ -146,7 +146,7 @@
 		this.show(img, url)
 
 		originalURL = location.href
-		history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url) // location.href | url
+		history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url)
 
 		return false
 	}
@@ -222,11 +222,12 @@
 
 	proto.onPopState = function onPopState(e) {
 		var state = e.originalEvent.state
-		if (state === null || !state.plainbox)
+		if (state === null || state.plainbox === undefined) return // not our business
+
+		if (state.plainbox === false)
 			this.hide()
-		else if (state.plainbox) {
+		else
 			this.show(state.plainboxImg, state.plainboxUrl)
-		}
 	}
 
 	/**
@@ -244,7 +245,7 @@
 		this.on('click' + instance.selector, selector, instance.clickEvent.bind(instance)) // click on any thumb
 
 		var state = history.state
-		if (state !== null && state.plainboxImg !== undefined) { // we recover state after browser restart etc
+		if (state !== null && state.plainbox === true) { // we recover state after browser restart etc
 			instance.show(state.plainboxImg, state.plainboxUrl)
 		}
 
