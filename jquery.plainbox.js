@@ -143,10 +143,10 @@
 		var el = NODE[0]
 		window.clearTimeout(_timeout)
 
+		el.setAttribute('aria-hidden', 'true')
+		nodeIsVisible = false
 		window.requestAnimationFrame(function rAF() {
 			el.style.opacity = '0'
-			el.setAttribute('aria-hidden', 'true')
-			nodeIsVisible = false
 		})
 
 		el.addEventListener('transitionend', function hide() {
@@ -199,9 +199,9 @@
 		elem.style.display = 'flex'
 		elem.focus() // enable "ESC"
 
+		nodeIsVisible = true
 		window.requestAnimationFrame(function rAF() {
 			elem.style.opacity = '1'
-			nodeIsVisible = true
 		})
 	}
 
