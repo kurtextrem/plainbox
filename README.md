@@ -25,7 +25,7 @@ The idea of this markup is that `<a>` tag has a big image and `<img>` has a thum
 Using only `<img>` is possible too. In this case, you will get the same image in the lightbox.
 
 ```html
-	<img src="image.jpg">
+<img src="image.jpg">
 ```
 
 You can also give a story link (e.g. where comments are). The browser will show the `href` URL during the plainbox is open. Once it is closed, the previous URL is recovered.
@@ -41,7 +41,7 @@ This makes it easy for users to link to the post.
 
 ```js
 $.fn.ready(function() {
-	$('.someElement--container') 		// The container to which the click event listener is added to
+	$('.someElement--container')		// The container to which the click event listener is added to
 																	// If you add thumbs dynamically, pick an element that stays, if you don't prefer something close for optimal performance
 
 		.plainbox('img', {						// The elements which trigger the plainbox
@@ -89,4 +89,5 @@ jQuery.ready(function() {
 ## Performance
 
 The plainbox is appended to the DOM once and re-used to optimize performance. If you remove the plainbox from its parent, make sure to call the plugin again.
+
 60 fps+ are achieved through CSS3 transitions, creating an extra layer for the plainbox and `requestAnimationFrame`.

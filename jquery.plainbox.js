@@ -87,7 +87,7 @@
 	}
 	var originalURL = location.href
 
-	function _hide(inClass, _loading) {
+	function _hide(_loading) {
 		return function hide() {
 			var el = NODE[0]
 			window.clearTimeout(_timeout)
@@ -126,12 +126,13 @@
 		this._loading = getUrlValue(settings.loadingURL) // loading animation
 		this._error = getUrlValue(settings.errorURL)
 
-		this.hide = _hide(settings.inClass, this._loading)
+		this.hide = _hide(this._loading)
 		this.parent = $(settings.parent || document.body)
 
 		this.parent.on('click' + this.selector + ' keyup' + this.selector, this.selector, this.closeEvent.bind(this)) // click / ESC on plainbox image
 		$(window).off('popstate.plainbox').on('popstate.plainbox', this.onPopState.bind(this)) // we only want one popstate listener at the same time
 	}
+
 	var proto = Plainbox.prototype
 
 	proto.clickEvent = function clickEvent(e) {
@@ -145,7 +146,7 @@
 		this.show(img, url)
 
 		originalURL = location.href
-		history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', location.href) // location.href | url
+		history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url) // location.href | url
 
 		return false
 	}
