@@ -105,8 +105,6 @@
 				style['background-size'] = ''
 				el.textContent = ''
 			})
-
-			history.replaceState({ plainbox: false }, '', originalURL)
 		}
 	}
 
@@ -135,6 +133,7 @@
 
 	var proto = Plainbox.prototype
 
+	var _state = { plainbox: true, plainboxUrl: '', plainboxImg: '' }
 	proto.clickEvent = function clickEvent(e) {
 		var url = e.currentTarget.href || e.currentTarget.src
 
@@ -146,7 +145,9 @@
 		this.show(img, url)
 
 		originalURL = location.href
-		history.pushState({ plainbox: true, plainboxUrl: url, plainboxImg: img }, '', url)
+		_state.plainboxUrl = url
+		_state.plainboxImg = img
+		history.pushState(_state, '', url)
 
 		return false
 	}
@@ -171,6 +172,7 @@
 		return img
 	}
 
+	var _stateFalse = { plainbox: false }
 	proto.show = function show(imgURL, url) {
 		var img = loadImg(imgURL, url)
 		img.onerror = function onerror() {
@@ -181,7 +183,10 @@
 
 			if (this.settings.errorTimeout) {
 				window.clearTimeout(_timeout)
-				_timeout = window.setTimeout(function timeout() { this.hide() }.bind(this), this.settings.errorTimeout)
+				_timeout = window.setTimeout(function timeout() {
+					this.hide()
+					history.replaceState(_stateFalse, '', originalURL)
+				}.bind(this), this.settings.errorTimeout)
 			}
 		}.bind(this)
 
@@ -217,6 +222,7 @@
 		e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
 			this.hide()
+			history.replaceState(_stateFalse, '', originalURL)
 		}
 	}
 
@@ -246,7 +252,7 @@
 
 		var state = history.state
 		if (state === null) {
-			history.replaceState({ plainbox: false }, '', location.href)
+			history.replaceState(_stateFalse, '', location.href)
 		} else if (state.plainbox === true) { // we recover state after browser restart etc
 			instance.show(state.plainboxImg, state.plainboxUrl)
 		} else {
