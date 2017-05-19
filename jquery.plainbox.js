@@ -363,8 +363,10 @@
 
 		settings._loading = getUrlValue(settings.loadingURL) // loading animation
 
-		if (!nodeInDom) // only create node once
+		if (!nodeInDom) { // only create node once
 			NODE = getNode(settings._loading)
+			window.addEventListener('resize', debounce(onResize, 100))
+		}
 
 		var _selector = settings._selector = '.' + settings.className
 		settings._error = getUrlValue(settings.errorURL)
@@ -376,7 +378,6 @@
 		settings._parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent.bind(settings))
 		/** Popstate listener (only one at a time) */
 		$(window).off('popstate.plainbox').on('popstate.plainbox', onPopState.bind(settings))
-		$(window).off('resize.plainbox').on('resize.plainbox', debounce(onResize, 100))
 
 		var state = history.state
 		if (state === null) { // new state, add closed state

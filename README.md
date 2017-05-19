@@ -4,7 +4,7 @@
 
 This is a really simple **image lightbox** jQuery plugin. It has very little options and works out of the box. It just is a JavaScript *jquery.plainbox.js* file with no styleshets, images, etc.
 
-And again, all you need is **jquery.plainbox.js** (it's around 200 lines of code).
+And again, all you need is **jquery.plainbox.js** (it's around 3k minified).
 
 **Note: Browsers need flexbox, `popState`/`pushState` and `requestAnimationFrame` support. Polyfill accordingly.**
 
