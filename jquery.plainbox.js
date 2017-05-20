@@ -142,26 +142,43 @@
 	/**
 	 * Sets the correct Plainbox image.
 	 *
-	 * @param {Event} [e]
+	 * @param {Event|Image} [e]
 	 */
 	function showImg(e) {
-		if (e !== undefined && (e.target.width > clientWidth() || e.target.height > clientHeight()))
-			nodeStyle['background-size'] = 'contain'
+		if (e !== undefined) {
+			var target = e.target !== undefined ? e.target : e
+			if (target.width > clientWidth() || target.height > clientHeight())
+				nodeStyle['background-size'] = 'contain'
+		}
 
 		NODE.css(nodeStyle)
 	}
+
+	var _modern = window.fetch !== undefined && window.createImageBitmap !== undefined,
+		_hostname = location.hostname + '/'
 
 	/**
 	 * Creates a new Image object and loads it.
 	 *
 	 * @param {String} imgURL
 	 * @param {String} url
-	 * @returns {Image}
+	 * @returns {Image|Promise}
 	 */
-	function loadImg(imgURL, url) {
-		var img = new Image()
-		img.src = imgURL
-		img.onload = showImg
+	function loadImg(imgURL, url, async) {
+		var img = null
+		if (!async && !_modern && imgURL.indexOf(_hostname) === -1) {
+			img = new Image()
+			img.src = imgURL
+			img.onload = showImg
+		} else {
+			img = window.fetch(imgURL).then(function fetch(response) {
+				if (response.ok)
+					return response.blob().then(function response(blob) {
+						return window.createImageBitmap(blob).then(showImg)
+					})
+				throw new Error(response.statusText)
+			})
+		}
 
 		NODE[0].href = url
 		nodeStyle['background-image'] = getUrlValue(imgURL)
@@ -177,9 +194,9 @@
 	 * @param {String} url
 	 */
 	function show(settings, imgURL, url) {
-		var img = loadImg(imgURL, url)
+		var img = loadImg(imgURL, url, settings.async)
 
-		img.onerror = function onerror() {
+		function onerror() {
 			nodeStyle['background-image'] = settings._error
 			NODE[0].textContent = settings.error
 
@@ -192,6 +209,12 @@
 					history.back()
 				}, settings.errorTimeout)
 			}
+		}
+
+		if (img.catch !== undefined) {
+			img.catch(onerror)
+		} else {
+			img.onerror = onerror
 		}
 
 		img = null // free for GC
@@ -319,16 +342,17 @@
 	 * @typedef {Object} SETTINGS
 	 * @property {String} id
 	 * @property {String} className
-	 * @property {String} parent 			Parent of the Plainbox (jQuery Selector)
+	 * @property {String} parent Parent of the Plainbox (jQuery Selector)
 	 * @property {String} loadingURL
 	 * @property {String} errorURL
 	 * @property {String} error
 	 * @property {Number} errorTimeout Timeout in MS after which to close the error
+	 * @property {Boolean} async Enable async image decoding
 	 *
-	 * @property {String} _selector 	Selector of the Plainbox (jQuery Selector)
-	 * @property {String} _loading 		CSS value for the loadingURL
-	 * @property {String} _error 			CSS value for the errorURL
-	 * @property {jQuery} _parent 		Parent jQuery object
+	 * @property {String} _selector Selector of the Plainbox (jQuery Selector)
+	 * @property {String} _loading CSS value for the loadingURL
+	 * @property {String} _error CSS value for the errorURL
+	 * @property {jQuery} _parent Parent jQuery object
 	 */
 	/**
 	 * Default settings object.
@@ -345,6 +369,8 @@
 		errorURL: 'https://s4db.net/errors/assets/img/pet_crying.png',
 		error: 'Error',
 		errorTimeout: 5000,
+
+		async: false,
 
 		/**
 		* Selector of the Plainbox.
