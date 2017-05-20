@@ -164,12 +164,13 @@
 	 * @param {String} url
 	 * @returns {Image|Promise}
 	 */
-	function loadImg(imgURL, url, async) {
+	function loadImg(imgURL, url, onerror, async) {
 		var img = null
-		if (!async && !_modern && imgURL.indexOf(_hostname) === -1) {
+		if (!async || !_modern) {
 			img = new Image()
 			img.src = imgURL
 			img.onload = showImg
+			img.onerror = onerror
 		} else {
 			img = window.fetch(imgURL).then(function fetch(response) {
 				if (response.ok)
@@ -177,13 +178,13 @@
 						return window.createImageBitmap(blob).then(showImg)
 					})
 				throw new Error(response.statusText)
-			})
+			}).catch(function error() { return loadImg(imgURL, url, onerror, false) })
 		}
 
 		NODE[0].href = url
 		nodeStyle['background-image'] = getUrlValue(imgURL)
 
-		return img
+		img = null // free for GC
 	}
 
 	/**
@@ -194,8 +195,6 @@
 	 * @param {String} url
 	 */
 	function show(settings, imgURL, url) {
-		var img = loadImg(imgURL, url, settings.async)
-
 		function onerror() {
 			nodeStyle['background-image'] = settings._error
 			NODE[0].textContent = settings.error
@@ -211,13 +210,7 @@
 			}
 		}
 
-		if (img.catch !== undefined) {
-			img.catch(onerror)
-		} else {
-			img.onerror = onerror
-		}
-
-		img = null // free for GC
+		loadImg(imgURL, url, onerror, settings.async)
 
 		showNode(settings)
 	}
