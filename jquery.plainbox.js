@@ -212,6 +212,8 @@
 			settings._parent.append(elem)
 		}
 
+		nodeIsVisible = true
+
 		elem.id = settings.id
 		elem.className = settings.className // set ID / class
 		elem.setAttribute('aria-hidden', 'false')
@@ -219,7 +221,6 @@
 		elem.style.display = 'flex'
 		elem.focus() // enable "ESC"
 
-		nodeIsVisible = true
 		window.requestAnimationFrame(function rAF() {
 			elem.style.opacity = '1'
 		})
@@ -262,11 +263,14 @@
 	 * @param {Event} e jQuery Event
 	 */
 	function closeEvent(e) {
+		if (!nodeIsVisible) return true
+
 		if (e.type === 'click')
 			e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
 			hide()
 			history.back()
+			return false
 		}
 		return true
 	}
@@ -368,6 +372,8 @@
 
 		if (!nodeInDom) { // only create node once
 			NODE = getNode(settings._loading)
+			/** Plainbox click / "ESC" */
+			NODE.on('click.plainbox keyup.plainbox', closeEvent)
 			window.addEventListener('resize', debounce(onResize, 100))
 		}
 
@@ -376,11 +382,8 @@
 		settings._parent = $(settings.parent || document.body)
 
 		/** Click on any thumb */
-		var event = 'click' + _selector
+		var event = 'click.plainbox.' + _selector
 		this.on(event, selector, clickEvent.bind(settings))
-		/** Plainbox click / "ESC"; Has to be attached to the body or the ESC button isn't caught */
-		event += ' keyup' + _selector
-		$(document.body).off(event).on(event, _selector, closeEvent)
 		/** Popstate listener (only one at a time) */
 		event = 'popstate.plainbox'
 		$(window).off(event).on(event, onPopState.bind(settings))
