@@ -377,7 +377,7 @@
 
 		/** Click on any thumb */
 		var event = 'click' + _selector
-		this.on('click' + _selector, selector, clickEvent.bind(settings))
+		this.on(event, selector, clickEvent.bind(settings))
 		/** Plainbox click / "ESC"; Has to be attached to the body or the ESC button isn't caught */
 		event += ' keyup' + _selector
 		$(document.body).off(event).on(event, _selector, closeEvent)
