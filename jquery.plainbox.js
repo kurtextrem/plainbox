@@ -119,10 +119,8 @@
 
 	/**
 	 * Hides the Plainbox.
-	 *
-	 * @param {SETTINGS} settings
 	 */
-	function hide(settings) {
+	function hide() {
 		var el = NODE[0]
 		window.clearTimeout(_timeout)
 
@@ -135,35 +133,9 @@
 		el.addEventListener('transitionend', function hide() {
 			el.removeEventListener('transitionend', hide)
 			el.style.display = 'none'
-			el.style.backgroundImage = settings._loading
 			el.style.backgroundSize = ''
 			nodeStyle['background-size'] = ''
 			el.textContent = ''
-		})
-	}
-
-	/**
-	 * Fades in the Plainbox and sets the correct class / ID.
-	 *
-	 * @param {SETTINGS} settings
-	 */
-	function showNode(settings) {
-		var elem = NODE[0]
-
-		if (!nodeInDom) {
-			nodeInDom = true
-			settings._parent.append(elem)
-		}
-
-		elem.id = settings.id
-		elem.className = settings.className // set ID / class
-		elem.setAttribute('aria-hidden', 'false')
-		elem.style.display = 'flex'
-		elem.focus() // enable "ESC"
-
-		nodeIsVisible = true
-		window.requestAnimationFrame(function rAF() {
-			elem.style.opacity = '1'
 		})
 	}
 
@@ -187,15 +159,13 @@
 	 * @returns {Image}
 	 */
 	function loadImg(imgURL, url) {
-		var elem = NODE[0],
-			img = new Image()
-
-		elem.href = url
-		nodeStyle['background-image'] = getUrlValue(imgURL)
-
+		var img = new Image()
+		img.src = imgURL
 		img.onload = showImg
 
-		img.src = imgURL
+		NODE[0].href = url
+		nodeStyle['background-image'] = getUrlValue(imgURL)
+
 		return img
 	}
 
@@ -218,7 +188,7 @@
 			if (settings.errorTimeout) {
 				window.clearTimeout(_timeout)
 				_timeout = window.setTimeout(function timeout() {
-					hide(settings)
+					hide()
 					history.back()
 				}, settings.errorTimeout)
 			}
@@ -227,6 +197,32 @@
 		img = null // free for GC
 
 		showNode(settings)
+	}
+
+	/**
+	* Fades in the Plainbox and sets the correct class / ID.
+	*
+	* @param {SETTINGS} settings
+	*/
+	function showNode(settings) {
+		var elem = NODE[0]
+
+		if (!nodeInDom) {
+			nodeInDom = true
+			settings._parent.append(elem)
+		}
+
+		elem.id = settings.id
+		elem.className = settings.className // set ID / class
+		elem.setAttribute('aria-hidden', 'false')
+		elem.style.backgroundImage = settings._loading
+		elem.style.display = 'flex'
+		elem.focus() // enable "ESC"
+
+		nodeIsVisible = true
+		window.requestAnimationFrame(function rAF() {
+			elem.style.opacity = '1'
+		})
 	}
 
 	var _state = { plainbox: true, plainboxUrl: '', plainboxImg: '' }
@@ -249,7 +245,12 @@
 
 		_state.plainboxUrl = url
 		_state.plainboxImg = img
-		history.pushState(_state, '', url)
+		try {
+			history.pushState(_state, '', url)
+		} catch (e) {
+			console.warn('Couldn\'t set pushState URL. Is it from the same origin?', e)
+			history.pushState(_state, '', location.href)
+		}
 
 		return false
 	}
@@ -261,11 +262,13 @@
 	 * @param {Event} e jQuery Event
 	 */
 	function closeEvent(e) {
-		e.preventDefault()
+		if (e.type === 'click')
+			e.preventDefault()
 		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27)) {
-			hide(this)
+			hide()
 			history.back()
 		}
+		return true
 	}
 
 	/**
@@ -279,7 +282,7 @@
 		if (state !== null && state.plainbox === true) {
 			show(this, state.plainboxImg, state.plainboxUrl)
 		} else if (nodeIsVisible) {
-			hide(this)
+			hide()
 		}
 	}
 
@@ -373,14 +376,17 @@
 		settings._parent = $(settings.parent || document.body)
 
 		/** Click on any thumb */
+		var event = 'click' + _selector
 		this.on('click' + _selector, selector, clickEvent.bind(settings))
-		/** Plainbox click / "ESC" */
-		settings._parent.on('click' + _selector + ' keyup' + _selector, _selector, closeEvent.bind(settings))
+		/** Plainbox click / "ESC"; Has to be attached to the body or the ESC button isn't caught */
+		event += ' keyup' + _selector
+		$(document.body).off(event).on(event, _selector, closeEvent)
 		/** Popstate listener (only one at a time) */
-		$(window).off('popstate.plainbox').on('popstate.plainbox', onPopState.bind(settings))
+		event = 'popstate.plainbox'
+		$(window).off(event).on(event, onPopState.bind(settings))
 
 		var state = history.state
-		if (state === null) { // new state, add closed state
+		if (state === null || typeof state !== 'object') { // new state, add closed state
 			history.replaceState({ plainbox: false }, '', location.href)
 		} else if (state.plainbox === true) { // we recover state after browser restart etc
 			show(settings, state.plainboxImg, state.plainboxUrl)
