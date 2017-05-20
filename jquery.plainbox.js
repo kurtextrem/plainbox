@@ -154,15 +154,13 @@
 		NODE.css(nodeStyle)
 	}
 
-	var _modern = window.fetch !== undefined && window.createImageBitmap !== undefined,
-		_hostname = location.hostname + '/'
+	var _modern = window.fetch !== undefined && window.createImageBitmap !== undefined
 
 	/**
 	 * Creates a new Image object and loads it.
 	 *
 	 * @param {String} imgURL
 	 * @param {String} url
-	 * @returns {Image|Promise}
 	 */
 	function loadImg(imgURL, url, onerror, async) {
 		var img = null
@@ -172,7 +170,7 @@
 			img.onload = showImg
 			img.onerror = onerror
 		} else {
-			img = window.fetch(imgURL).then(function fetch(response) {
+			img = fetch(imgURL).then(function fetch(response) {
 				if (response.ok)
 					return response.blob().then(function response(blob) {
 						return window.createImageBitmap(blob).then(showImg)
