@@ -85,7 +85,7 @@
 				right: '0',
 				bottom: '0',
 				// Image backkground
-				background: 'rgba(0, 0, 0, 0.85) center center no-repeat',
+				background: 'rgba(0, 0, 0, .9) center center no-repeat',
 				// Plainbox image
 				'background-image': _loading,
 				// Performance
@@ -94,7 +94,7 @@
 				// Animation
 				opacity: '0',
 				'will-change': 'opacity',
-				transition: 'opacity 300ms ease-in-out',
+				transition: 'opacity 300ms ease-out',
 				// Error Text
 				'justify-content': 'center',
 				'align-items': 'center',
@@ -161,6 +161,8 @@
 	 *
 	 * @param {String} imgURL
 	 * @param {String} url
+	 * @param {Function} onerror Callback function when an error happended during image Loading
+	 * @param {Boolean} async Whether to async decode images (doesn't block main thread)
 	 */
 	function loadImg(imgURL, url, onerror, async) {
 		if (!async || !_modern) {
@@ -336,7 +338,7 @@
 	 * @property {String} errorURL
 	 * @property {String} error
 	 * @property {Number} errorTimeout Timeout in MS after which to close the error
-	 * @property {Boolean} async Enable async image decoding
+	 * @property {Boolean} async Whether to async decode images (doesn't block main thread) - Needs correct Access-Control-Allow-Origin header on 3rd party images
 	 *
 	 * @property {String} _selector Selector of the Plainbox (jQuery Selector)
 	 * @property {String} _loading CSS value for the loadingURL
