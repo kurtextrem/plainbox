@@ -399,7 +399,7 @@
 		settings._parent = $(settings.parent || document.body)
 
 		/** Click on any thumb */
-		var event = 'click.plainbox.' + _selector
+		var event = 'click.plainbox.' + _selector + ' dblclick.plainbox.' + _selector
 		this.on(event, selector, clickEvent.bind(settings))
 		/** Popstate listener (only one at a time) */
 		event = 'popstate.plainbox'
