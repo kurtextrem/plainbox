@@ -177,7 +177,8 @@
 					return response.blob().then(function response(blob) {
 						return window.createImageBitmap(blob).then(showImg)
 					})
-				throw new Error(response.statusText)
+				console.error(response.statusText)
+				return Promise.reject(response.statusText)
 			}).catch(function error() { return loadImg(imgURL, url, onerror, false) })
 		}
 	}
