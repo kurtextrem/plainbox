@@ -51,8 +51,6 @@ $.fn.ready(function() {
 
 			loadingURL: 'someGif',      // URL to a loading animation
 
-			async: false								// Whether to async decode images (doesn't block main thread) - Needs correct Access-Control-Allow-Origin header on 3rd party images
-
 			errorURL: '',               // URL to an error image
 			error: ''                   // Error text to display
 			errorTimeout: 5000          // Milliseconds after which to close the error image (default: 5000 ms)

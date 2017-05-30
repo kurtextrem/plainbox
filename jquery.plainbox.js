@@ -156,33 +156,39 @@
 		return e
 	}
 
-	var _modern = window.fetch !== undefined && window.createImageBitmap !== undefined
-	var _dispose = function(e) { return e.close() }
-
 	/**
 	 * Creates a new Image object and loads it.
 	 *
 	 * @param {String} imgURL
 	 * @param {String} url
 	 * @param {Function} onerror Callback function when an error happended during image Loading
-	 * @param {Boolean} async Whether to async decode images (doesn't block main thread)
 	 */
-	function loadImg(imgURL, url, onerror, async) {
-		if (!async || !_modern) {
-			var img = new Image()
-			img.src = imgURL
-			img.onload = showImg
-			img.onerror = onerror
-			img = null // free for GC
-		} else {
-			fetch(imgURL).then(function fetch(response) {
-				if (response.ok)
-					return response.blob().then(function response(blob) {
-						return window.createImageBitmap(blob).then(showImg).then(_dispose)
-					})
-				console.error(response.statusText)
-				return Promise.reject(response.statusText)
-			}).catch(function error() { return loadImg(imgURL, url, onerror, false) })
+	function loadImg(imgURL, url, onerror) {
+		var img = new Image()
+		img.src = imgURL
+		img.onload = showImg
+		img.onerror = onerror
+		img = null // free for GC
+	}
+
+	/**
+	 * Image loading error handler.
+	 *
+	 * @this {SETTINGS}
+	 * @param {ErrorEvent} e Error Event
+	 */
+	function onerror(e) {
+		nodeStyle['background-image'] = this._error
+		NODE[0].textContent = this.error
+
+		showImg()
+
+		if (this.errorTimeout) {
+			window.clearTimeout(_timeout)
+			_timeout = window.setTimeout(function timeout() {
+				hide()
+				history.back()
+			}, this.errorTimeout)
 		}
 	}
 
@@ -194,22 +200,7 @@
 	 * @param {String} url
 	 */
 	function show(settings, imgURL, url) {
-		function onerror() {
-			nodeStyle['background-image'] = settings._error
-			NODE[0].textContent = settings.error
-
-			showImg()
-
-			if (settings.errorTimeout) {
-				window.clearTimeout(_timeout)
-				_timeout = window.setTimeout(function timeout() {
-					hide()
-					history.back()
-				}, settings.errorTimeout)
-			}
-		}
-
-		loadImg(imgURL, url, onerror, settings.async)
+		loadImg(imgURL, url, onerror.bind(settings))
 
 		NODE[0].href = url
 		nodeStyle['background-image'] = getUrlValue(imgURL)
@@ -342,7 +333,6 @@
 	 * @property {String} errorURL
 	 * @property {String} error
 	 * @property {Number} errorTimeout Timeout in MS after which to close the error
-	 * @property {Boolean} async Whether to async decode images (doesn't block main thread) - Needs correct Access-Control-Allow-Origin header on 3rd party images
 	 *
 	 * @property {String} _selector Selector of the Plainbox (jQuery Selector)
 	 * @property {String} _loading CSS value for the loadingURL
@@ -387,7 +377,7 @@
 	 */
 	$.fn.plainbox = function plainbox(selector, options) {
 		/** @type {SETTINGS} */
-		var settings = $.extend(SETTINGS, options || {})
+		var settings = $.extend(options || {}, SETTINGS)
 
 		settings._loading = getUrlValue(settings.loadingURL) // loading animation
 
@@ -398,12 +388,11 @@
 			window.addEventListener('resize', debounce(onResize, 100))
 		}
 
-		var _selector = settings._selector = '.' + settings.className
 		settings._error = getUrlValue(settings.errorURL)
 		settings._parent = $(settings.parent || document.body)
 
 		/** Click on any thumb */
-		var event = 'click.plainbox.' + _selector
+		var event = 'click.plainbox.' + settings.className
 		this.on(event, selector, clickEvent.bind(settings))
 		/** Popstate listener (only one at a time) */
 		event = 'popstate.plainbox'
