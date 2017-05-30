@@ -152,9 +152,12 @@
 		}
 
 		NODE.css(nodeStyle)
+
+		return e
 	}
 
 	var _modern = window.fetch !== undefined && window.createImageBitmap !== undefined
+	var _dispose = function(e) { return e.close() }
 
 	/**
 	 * Creates a new Image object and loads it.
@@ -175,7 +178,7 @@
 			fetch(imgURL).then(function fetch(response) {
 				if (response.ok)
 					return response.blob().then(function response(blob) {
-						return window.createImageBitmap(blob).then(showImg)
+						return window.createImageBitmap(blob).then(showImg).then(_dispose)
 					})
 				console.error(response.statusText)
 				return Promise.reject(response.statusText)
