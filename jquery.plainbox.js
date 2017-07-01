@@ -91,6 +91,7 @@
 				// Performance
 				'z-index': '99999',
 				contain: 'strict',
+				outline: 'none',
 				// Animation
 				opacity: '0',
 				'will-change': 'opacity',
