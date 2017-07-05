@@ -35,6 +35,10 @@
 		.plainbox[aria-hidden="true"] {
 			/** Plainbox is hidden */
 		}
+
+		.plainbox--container {
+			color: blue;
+		}
 	</style>
 </head>
 <body>
@@ -61,7 +65,7 @@
 			<img src="http://lorempixel.com/400/400/?2">
 		</a>
 		<!-- Cached image -->
-		<a href="#" data-image="https://s4db.net/assets/img/images.png">
+		<a href="#" data-image="https://s4db.net/assets/img/images.png" data-sidebar>
 			<img src="https://s4db.net/assets/img/newsfeed/banner.png">
 		</a>
 	</div>
@@ -73,7 +77,11 @@
 			$('.images').plainbox('a')
 			$('.images2').plainbox('a', {
 				id: 'plainbox2',
-				className: 'plainbox2'
+				className: 'plainbox2',
+				sidebar: true,
+				onBeforeShow: function(url, node, sidebar) {
+					sidebar.text('Oh hello there, img url is ' + url)
+				}
 			})
 		})
 	</script>

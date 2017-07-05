@@ -7,7 +7,7 @@
  * @license MIT
  * @copyright Jacob "kurtextrem" Groß 2017
  */
-/*! @url github.com/kurtextrem/plainbox | @license MIT | @copyrightJacob "kurtextrem" Groß 2017 */
+/*! @url github.com/kurtextrem/plainbox | @license MIT | @copyright Jacob "kurtextrem" Groß 2017 */
 (function(window, $) {
 	'use strict'
 
@@ -23,8 +23,7 @@
 	 * @returns {Number}
 	 */
 	function clientWidth() {
-		if (_clientWidth === null)
-			_clientWidth = window.innerWidth
+		if (_clientWidth === null) _clientWidth = window.innerWidth
 		return _clientWidth
 	}
 
@@ -35,8 +34,7 @@
 	 * @returns {Number}
 	 */
 	function clientHeight() {
-		if (_clientHeight === null)
-			_clientHeight = window.innerHeight
+		if (_clientHeight === null) _clientHeight = window.innerHeight
 		return _clientHeight
 	}
 
@@ -46,6 +44,13 @@
 	 * @kind jQuery Object
 	 */
 	var NODE = null
+
+	/**
+	 * Holds the Sidebar.
+	 * @type {jQuery}
+	 * @kind jQuery Object
+	 */
+	var SIDEBAR = null
 
 	/**
 	 * Whether or not the Plainbox is currently visible.
@@ -64,7 +69,7 @@
 	 */
 	var nodeStyle = {
 		'background-image': '',
-		'background-size': ''
+		'background-size': '',
 	}
 
 	/**
@@ -74,33 +79,48 @@
 	 * @returns {jQuery}
 	 */
 	function getNode(_loading) {
-		return $(document.createElement('a'))
-			.css({
-				// Easier centering
-				display: 'flex',
-				// Position
-				position: 'fixed',
-				top: '0',
-				left: '0',
-				right: '0',
-				bottom: '0',
-				// Image backkground
-				background: 'rgba(0, 0, 0, .9) center center no-repeat',
-				// Plainbox image
-				'background-image': _loading,
-				// Performance
-				'z-index': '99999',
-				contain: 'strict',
-				outline: 'none',
-				// Animation
-				opacity: '0',
-				'will-change': 'opacity',
-				transition: 'opacity 300ms ease-out',
-				// Error Text
-				'justify-content': 'center',
-				'align-items': 'center',
-				'text-decoration': 'none'
-			})
+		return $(document.createElement('a')).css({
+			// Easier centering
+			display: 'none', // flex
+			// Position
+			position: 'fixed',
+			top: '0',
+			left: '0',
+			right: '0',
+			bottom: '0',
+			// Image backkground
+			background: 'rgba(0, 0, 0, .9) center center no-repeat',
+			// Plainbox image
+			'background-image': _loading,
+			// Performance
+			'z-index': '99999',
+			contain: 'strict',
+			outline: 'none',
+			// Animation
+			opacity: '0',
+			'will-change': 'opacity',
+			transition: 'opacity 300ms ease-out',
+			// Error Text
+			'justify-content': 'center',
+			'align-items': 'center',
+			'text-decoration': 'none',
+		})
+	}
+
+	function getSidebar() {
+		return $(document.createElement('div')).addClass('plainbox--sidebar').css({
+			display: 'none',
+			width: '335px',
+			'min-height': '45vh',
+			transform: 'translateX(335px)',
+		})
+		/*.css(
+			{
+				// transform
+				// height
+				// width
+			}
+		)*/
 	}
 
 	/**
@@ -109,7 +129,9 @@
 	 * @param {String} url
 	 * @returns {String}
 	 */
-	function getUrlValue(url) { return 'url("' + url + '")' }
+	function getUrlValue(url) {
+		return 'url("' + url + '")'
+	}
 
 	/**
 	 * Holds the current timeout
@@ -143,18 +165,21 @@
 	/**
 	 * Sets the correct Plainbox image.
 	 *
-	 * @param {Event|Image} [e]
+	 * @param {HTMLImageElement} [img]
 	 */
-	function showImg(e) {
-		if (e !== undefined) {
-			var target = e.target !== undefined ? e.target : e
-			if (target.width > clientWidth() || target.height > clientHeight())
-				nodeStyle['background-size'] = 'contain'
+	function showImg(img) {
+		if (img !== undefined && (img.width > clientWidth() || img.height > clientHeight())) {
+			nodeStyle['background-size'] = 'contain'
 		}
 
 		NODE.css(nodeStyle)
 
-		return e
+		return img
+	}
+
+	function onload(e) {
+		showImg(e.target)
+		handleSidebar(e.target)
 	}
 
 	/**
@@ -167,7 +192,7 @@
 	function loadImg(imgURL, url, onerror) {
 		var img = new Image()
 		img.src = imgURL
-		img.onload = showImg
+		img.onload = onload
 		img.onerror = onerror
 		img = null // free for GC
 	}
@@ -175,7 +200,7 @@
 	/**
 	 * Image loading error handler.
 	 *
-	 * @this {SETTINGS}
+	 * @this {SETTINGS|HTMLElement}
 	 * @param {ErrorEvent} e Error Event
 	 */
 	function onerror(e) {
@@ -207,6 +232,7 @@
 		nodeStyle['background-image'] = getUrlValue(imgURL)
 
 		showNode(settings)
+		toggleSidebar(settings)
 	}
 
 	/**
@@ -216,23 +242,33 @@
 	*/
 	function showNode(settings) {
 		var elem = NODE[0]
-
-		if (!nodeInDom) {
-			nodeInDom = true
-			settings._parent.append(elem)
-		}
-
-		nodeIsVisible = true
-
 		elem.id = settings.id
 		elem.className = settings.className // set ID / class
 		elem.setAttribute('aria-hidden', 'false')
 		elem.style.backgroundImage = settings._loading
 		elem.style.display = 'flex'
-		elem.focus() // enable "ESC"
+		elem.focus() // enable "ESC" key
+
+		nodeIsVisible = true
 
 		window.requestAnimationFrame(function rAF() {
 			elem.style.opacity = '1'
+		})
+	}
+
+	function toggleSidebar(settings) {
+		if (settings.sidebar) {
+			NODE.append(SIDEBAR).prop('data-sidebar', 'true')
+			SIDEBAR.css('display', 'block').prop('aria-hidden', 'false')
+		} else {
+			SIDEBAR.css('display', 'none').prop('aria-hidden', 'true')
+		}
+	}
+
+	function handleSidebar(img) {
+		SIDEBAR.css({
+			height: img.height + 'px',
+			transform: 'translateX(' + (img.width / 2 + 150) + 'px)',
 		})
 	}
 
@@ -252,6 +288,7 @@
 		e.preventDefault()
 
 		var img = e.currentTarget.dataset.image || url // either take data-image or href / src
+		this.onBeforeShow(img, NODE, SIDEBAR)
 		show(this, img, url)
 
 		_state.plainboxUrl = url
@@ -273,11 +310,11 @@
 	 * @param {Event} e jQuery Event
 	 */
 	function closeEvent(e) {
-		if (e.type === 'click' || e.type === 'dblclick')
-			e.preventDefault()
+		var type = e.type
+		if (type === 'click' || type === 'dblclick') e.preventDefault()
 
 		if (!nodeIsVisible) return true
-		if (e.type === 'click' || (e.type === 'keyup' && e.keyCode === 27) || e.type === 'dblclick') {
+		if (type === 'click' || (type === 'keyup' && e.keyCode === 27) || type === 'dblclick') {
 			hide()
 			history.back()
 			return false
@@ -335,10 +372,16 @@
 	 * @property {String} error
 	 * @property {Number} errorTimeout Timeout in MS after which to close the error
 	 *
+	 * @property {Boolean} sidebar Whether to enable the sidebar next to the image or not
+	 *
+	 * @property {Function} onBeforeShow
+	 *
 	 * @property {String} _selector Selector of the Plainbox (jQuery Selector)
 	 * @property {String} _loading CSS value for the loadingURL
 	 * @property {String} _error CSS value for the errorURL
 	 * @property {jQuery} _parent Parent jQuery object
+	 * @property {jQuery} _node Plainbox DOM Node jQuery object
+	 * @property {jQuery} _sidebar Sidebar DOM Node jQuery object
 	 */
 	/**
 	 * Default settings object.
@@ -356,7 +399,9 @@
 		error: 'Error',
 		errorTimeout: 5000,
 
-		async: false,
+		sidebar: false,
+
+		onBeforeShow: noop,
 
 		/**
 		* Selector of the Plainbox.
@@ -367,8 +412,11 @@
 		_selector: '',
 		_loading: '',
 		_error: '',
-		_parent: null
+		_parent: null,
+		_node: null,
+		_sidebar: null,
 	}
+	function noop() {}
 
 	/**
 	 * @this {jQuery} Container to which the click listener is added to
@@ -378,19 +426,25 @@
 	 */
 	$.fn.plainbox = function plainbox(selector, options) {
 		/** @type {SETTINGS} */
-		var settings = $.extend(options || {}, SETTINGS)
+		var settings = $.extend({}, SETTINGS, options)
 
 		settings._loading = getUrlValue(settings.loadingURL) // loading animation
+		settings._error = getUrlValue(settings.errorURL)
+		settings._parent = $(settings.parent || document.body)
 
-		if (!nodeInDom) { // only create node once
-			NODE = getNode(settings._loading)
+		if (!nodeInDom) {
+			// only create node once
+			settings._node = NODE = getNode(settings._loading)
 			/** Plainbox click / "ESC" */
 			NODE.on('click.plainbox keyup.plainbox dblclick.plainbox', closeEvent)
 			window.addEventListener('resize', debounce(onResize, 100))
-		}
 
-		settings._error = getUrlValue(settings.errorURL)
-		settings._parent = $(settings.parent || document.body)
+			settings._sidebar = SIDEBAR = getSidebar()
+			NODE.append(SIDEBAR)
+
+			nodeInDom = true
+			settings._parent.append(NODE)
+		}
 
 		/** Click on any thumb */
 		var event = 'click.plainbox.' + settings.className
@@ -400,11 +454,14 @@
 		$(window).off(event).on(event, onPopState.bind(settings))
 
 		var state = history.state
-		if (state === null || typeof state !== 'object') { // new state, add closed state
+		if (state === null || typeof state !== 'object') {
+			// new state, add closed state
 			history.replaceState({ plainbox: false }, '', location.href)
-		} else if (state.plainbox === true) { // we recover state after browser restart etc
+		} else if (state.plainbox === true) {
+			// we recover state after browser restart etc
 			show(settings, state.plainboxImg, state.plainboxUrl)
-		} else { // add to current state
+		} else {
+			// add to current state
 			state.plainbox = false
 		}
 
